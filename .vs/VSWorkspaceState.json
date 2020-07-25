@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\blazorlib",
+    "\\test",
+    "\\test\\clientside",
+    "\\test\\clientside\\Pages"
+  ],
+  "SelectedNode": "\\test\\clientside\\BlazorFluentUi.ClientSide.csproj",
+  "PreviewInSolutionExplorer": false
+}
