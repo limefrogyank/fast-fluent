@@ -25,6 +25,9 @@ export const ListStyles = css`
         font-weight: var(--font-weight-semiBold);
         outline: none;
         user-select: none;
+        height:100%;
+        overflow-y:hidden;
+        width:100%;
     }
     :host(.disabled) label {
         opacity: var(--disabled-opacity);

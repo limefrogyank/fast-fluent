@@ -1,9 +1,9 @@
-import { FASTDesignSystemProvider } from "@microsoft/fast-components-msft";
+import { FluentDesignSystemProvider } from "../design-system-provider";
 import Examples from "./fixtures/label.html";
 import { FluentLabel } from "../label";
 // Prevent tree-shaking
 FluentLabel;
-FASTDesignSystemProvider;
+FluentDesignSystemProvider;
 export default {
     title: "Label",
 };

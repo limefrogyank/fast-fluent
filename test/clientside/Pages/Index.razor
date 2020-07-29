@@ -8,8 +8,10 @@ Welcome to your new app.
 <fast-design-system-provider use-defaults>
     <div style="display:flex;flex-direction:column;align-items:flex-start;">
     
+    <input type="checkbox" @bind-value=@isChecked @bind-value:event="onchange" title="required" />
+
     <fast-fluent-text-field label="fast-fluent-text-field" />
-    <fast-fluent-text-field required label="Testing Required" />    
+    <fast-fluent-text-field required=@isChecked label="Testing Required" />    
     <fast-fluent-text-field disabled label="Testing Disabled" />
     <fast-fluent-label required>fast-fluent-label: Required Label</fast-fluent-label>
 
@@ -22,3 +24,7 @@ Welcome to your new app.
 
     </div>
 </fast-design-system-provider>
+
+@code{
+    bool isChecked=false;
+}

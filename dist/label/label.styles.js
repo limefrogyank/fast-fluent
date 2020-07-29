@@ -3,6 +3,7 @@ import { display, } from "@microsoft/fast-foundation";
 export const LabelStyles = css `
     ${display("inline-block")} :host {
         font-family: var(--body-font);
+        font-weight: var(--font-weight-semiBold);
         outline: none;
         user-select: none;
     }

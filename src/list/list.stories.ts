@@ -18,13 +18,13 @@ let loadList = (firstList:HTMLElement):void =>{
         
     list.onRenderCell = (item,index,isScrolling) => html<any>`
         <div>
-            item is ${x => item}
+            item is ${x => item.value}
             index is ${x => index}
         </div>
     `;
     let items : any[] = [];
-    for (var i = 0; i< 1000; i++){
-        items.push(i.toString());
+    for (var i = 0; i< 50; i++){
+        items.push({value: i.toString()});
     }
 
     list.items = items;

@@ -11,7 +11,14 @@ const EMPTY_RECT = {
     right: -1,
     width: 0,
     height: 0,
-  };
+};
+
+interface IVirtualizedData<T> {
+    subSetOfItems: T[];
+    numItemsToSkipBefore: number;
+    numItemsToSkipAfter: number;    
+    numItemsToShow: number;
+}
 
 interface IPage2<T> extends IPage<T>{
     getKey?: (item: T, index?: number) => string;
@@ -71,18 +78,18 @@ export class FluentList<T> extends FASTElement {
     public getPageHeight?: (itemIndex?: number, visibleRect?: IRectangle, itemCount?: number) => number;
 
           /**
-   * Called by the list to get the specification for a page.
-   * Use this method to provide an allocation of items per page,
-   * as well as an estimated rendered height for the page.
-   * The list will use this to optimize virtualization.
-   */
+    * Called by the list to get the specification for a page.
+    * Use this method to provide an allocation of items per page,
+    * as well as an estimated rendered height for the page.
+    * The list will use this to optimize virtualization.
+    */
     //@observable
     public getPageSpecification?: (itemIndex?: number, visibleRect?: IRectangle) => IPageSpecification;
     
     /**
-   * Method called by the list to get how many items to render per page from specified index.
-   * In general, use `getPageSpecification` instead.
-   */
+    * Method called by the list to get how many items to render per page from specified index.
+    * In general, use `getPageSpecification` instead.
+    */
     //@observable
     public getItemCountForPage?: ((itemIndex?: number, visibleRect?: IRectangle) => number) | undefined;
 
@@ -108,13 +115,13 @@ export class FluentList<T> extends FASTElement {
     @observable
     public onPageRemoved?: (page: IPage2<T>) => void;
     /**
-   * Optional callback invoked when List rendering completed.
-   * This can be on initial mount or on re-render due to scrolling.
-   * This method will be called as a result of changes in List pages (added or removed),
-   * and after ALL the changes complete.
-   * To track individual page Add / Remove use onPageAdded / onPageRemoved instead.
-   * @param pages - The current array of pages in the List.
-   */
+    * Optional callback invoked when List rendering completed.
+    * This can be on initial mount or on re-render due to scrolling.
+    * This method will be called as a result of changes in List pages (added or removed),
+    * and after ALL the changes complete.
+    * To track individual page Add / Remove use onPageAdded / onPageRemoved instead.
+    * @param pages - The current array of pages in the List.
+    */
     @observable
     public onPagesUpdated?: (pages: IPage2<T>[]) => void;
 
@@ -132,9 +139,9 @@ export class FluentList<T> extends FASTElement {
     private stateChangedFunc : (state: IListState<T>) => void;
 
       /**
-   * Whether to disable scroll state updates. This causes the isScrolling arg in onRenderCell to always be undefined.
-   * This is a performance optimization to let List skip a render cycle by not updating its scrolling state.
-   */
+    * Whether to disable scroll state updates. This causes the isScrolling arg in onRenderCell to always be undefined.
+    * This is a performance optimization to let List skip a render cycle by not updating its scrolling state.
+    */
     @attr
     public ignoreScrollingState?: boolean;
 
@@ -168,10 +175,35 @@ export class FluentList<T> extends FASTElement {
     private _async: Async;
     private _events: EventGroup;
 
+
+
+    @observable
+    averageHeight: number = 50;
+
+    intersectionObserver: IntersectionObserver;
+    mutationObserverBefore: MutationObserver;
+    mutationObserverAfter: MutationObserver;
+    spacerBefore: HTMLDivElement;
+    spacerAfter: HTMLDivElement;
+    scrollElement: HTMLElement;
+    itemCountMargin:number = 20;
+
+    @observable
+    virtualizedData: IVirtualizedData<T> = {subSetOfItems:[], numItemsToShow:20, numItemsToSkipAfter:0,numItemsToSkipBefore:0};
+
+    // @observable
+    // subSetOfItems: T[];
+    // @observable
+    // numItemsToSkipBefore: number=0;
+    // @observable
+    // numItemsToSkipAfter: number=0;    
+    // @observable
+    // numItemsToShow: number = 20;
+
     @observable
     _refs:Node[];
 
-    _scrollElement: HTMLElement;
+    //_scrollElement: HTMLElement;
     _surface: HTMLDivElement;
     _root: HTMLDivElement;
 
@@ -184,10 +216,10 @@ export class FluentList<T> extends FASTElement {
     private _estimatedPageHeight: number;
     private _totalEstimates: number;
     private _cachedPageHeights: {
-      [key: string]: {
-        height: number;
-        measureVersion: number;
-      };
+        [key: string]: {
+          height: number;
+          measureVersion: number;
+        };
     };
     private _focusedIndex: number;
     private _hasCompletedFirstRender: boolean;
@@ -211,24 +243,18 @@ export class FluentList<T> extends FASTElement {
 
         // Track the measure version for everything.
         this._measureVersion = 0;
+        
+        // this._onAsyncIdle = this._async.debounce(this._onAsyncIdle, IDLE_DEBOUNCE_DELAY, {
+        //     leading: false,
+        // });
 
-        // Ensure that scrolls are lazy updated.
-        this._onAsyncScroll = this._async.debounce(this._onAsyncScroll, MIN_SCROLL_UPDATE_DELAY, {
-        leading: false,
-        maxWait: MAX_SCROLL_UPDATE_DELAY,
-        }); 
+        // this._onAsyncResize = this._async.debounce(this._onAsyncResize, RESIZE_DELAY, {
+        //     leading: false,
+        // });
 
-        this._onAsyncIdle = this._async.debounce(this._onAsyncIdle, IDLE_DEBOUNCE_DELAY, {
-        leading: false,
-        });
-
-        this._onAsyncResize = this._async.debounce(this._onAsyncResize, RESIZE_DELAY, {
-        leading: false,
-        });
-
-        this._onScrollingDone = this._async.debounce(this._onScrollingDone, DONE_SCROLLING_WAIT, {
-        leading: false,
-        });
+        // this._onScrollingDone = this._async.debounce(this._onScrollingDone, DONE_SCROLLING_WAIT, {
+        // leading: false,
+        // });
 
         this._cachedPageHeights = {};
         this._estimatedPageHeight = 0;
@@ -240,21 +266,163 @@ export class FluentList<T> extends FASTElement {
 
     public connectedCallback() {
         super.connectedCallback();
-        console.log("Connected callback!");
-        this._updatePages();
-        this._measureVersion++;
-        this._scrollElement = findScrollableParent(this._root) as HTMLElement;
-
-        this._events.on(window, 'resize', this._onAsyncResize);
-        if (this._root) { 
-        this._events.on(this._root, 'focus', this._onFocus, true);
-        }
-        console.log(this._scrollElement);
-        if (this._scrollElement) {
-            this._events.on(this._scrollElement, 'scroll', this._onScroll);
-            this._events.on(this._scrollElement, 'scroll', this._onAsyncScroll);
-        }
         
+        //this._updatePages();
+        //this._measureVersion++;
+        //this._scrollElement = findScrollableParent(this._root) as HTMLElement;
+
+        //this._events.on(window, 'resize', this._onAsyncResize);
+        //if (this._root) { 
+        //    this._events.on(this._root, 'focus', this._onFocus, true);
+        //}
+        
+        
+        //const rootMargin: number = 500;
+        this.intersectionObserver = new IntersectionObserver((entries, observer) => {
+          //window.requestAnimationFrame(_=>{
+            
+          entries.forEach(entry => {
+            //console.log("scrollTop (intersection):" + entry.isIntersecting +" " + this.scrollElement.scrollTop );
+            if (!entry.isIntersecting) {
+              return;
+            }
+      
+            const containerSize = entry.rootBounds?.height;
+      
+            if (entry.target === this.spacerBefore) {
+              this.onSpacerTrigger('before', entry.intersectionRect.top - entry.boundingClientRect.top, containerSize); 
+              //dotNetHelper.invokeMethodAsync('OnSpacerBeforeVisible', entry.intersectionRect.top - entry.boundingClientRect.top, containerSize);
+            } else if (entry.target === this.spacerAfter) {
+              console.log(entry.intersectionRect);
+              console.log(entry.boundingClientRect);
+
+              this.onSpacerTrigger('after', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, containerSize);
+              //dotNetHelper.invokeMethodAsync('OnSpacerAfterVisible', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, containerSize);
+            } else {
+              throw new Error('Unknown intersection target');
+            }
+         
+            });
+          //});
+          }, {
+            root: this.scrollElement, rootMargin: '0px'
+        });    
+        this.intersectionObserver.observe(this.spacerBefore);
+        this.intersectionObserver.observe(this.spacerAfter);
+
+        // After each render, refresh the info about intersections
+        this.mutationObserverBefore = new MutationObserver(mutations => {
+          DOM.queueUpdate(_=>{
+            this.intersectionObserver.unobserve(this.spacerBefore);
+            this.intersectionObserver.observe(this.spacerBefore);
+          });
+        });
+
+        this.mutationObserverAfter = new MutationObserver(mutations => {
+          DOM.queueUpdate(_=>{
+            this.intersectionObserver.unobserve(this.spacerAfter);
+            this.intersectionObserver.observe(this.spacerAfter);
+          });
+        });
+
+        this.mutationObserverBefore.observe(this.spacerBefore, { attributes: true });
+        this.mutationObserverAfter.observe(this.spacerAfter, { attributes: true });
+        
+        
+    }
+
+
+    private onSpacerTrigger(spacerType: 'before'|'after', spacerSize:number, containerSize:number|undefined){
+        let itemCount = this.items !== undefined ? this.items.length : 0;
+        let numItemsToShow = Math.ceil(containerSize!/this.averageHeight) + 2;                    
+        numItemsToShow = Math.max(0, Math.min(numItemsToShow, itemCount));
+
+        if (spacerType == "before" )
+        {
+
+            let numItemsToSkipBefore = Math.max(0, Math.floor(spacerSize / this.averageHeight) - 1);
+            let numItemsToSkipAfter =  Math.max(0,itemCount - numItemsToShow - numItemsToSkipBefore);
+
+            //let subSetOfItems = this.items?.slice(numItemsToSkipBefore, numItemsToSkipBefore + numItemsToShow);
+            this.changeSubset(numItemsToShow, numItemsToSkipBefore, this.virtualizedData.subSetOfItems);
+
+            let newVirtdata : IVirtualizedData<T> = {
+                subSetOfItems: this.virtualizedData.subSetOfItems,
+                numItemsToSkipBefore:numItemsToSkipBefore,
+                numItemsToShow:numItemsToShow,
+                numItemsToSkipAfter:numItemsToSkipAfter
+            };
+            if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore ||
+              newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter ||
+              newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow){
+                    this.virtualizedData = newVirtdata;
+              }
+        }
+        else if (spacerType == "after" )
+        {
+
+            let numItemsToSkipAfter = Math.max(0, Math.floor(spacerSize / this.averageHeight) - 1);
+            let numItemsToSkipBefore = Math.max(0, itemCount - numItemsToShow - numItemsToSkipAfter);
+
+            //let subSetOfItems = this.items?.slice(numItemsToSkipBefore, numItemsToSkipBefore + numItemsToShow);
+            this.changeSubset(numItemsToShow, numItemsToSkipBefore, this.virtualizedData.subSetOfItems);
+            let newVirtdata : IVirtualizedData<T> = {
+                subSetOfItems: this.virtualizedData.subSetOfItems,
+                numItemsToSkipBefore:numItemsToSkipBefore,
+                numItemsToShow:numItemsToShow,
+                numItemsToSkipAfter:numItemsToSkipAfter
+            };
+            if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore ||
+                newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter ||
+                newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow){
+                    this.virtualizedData = newVirtdata;
+              }
+        }
+  
+    }
+
+    private changeSubset(totalToTake:number, numberToSkipFirst:number, subset:T[]){
+        if (subset.length == 0 && this.items !== undefined) {
+            var itemsToAdd = this.items.slice(numberToSkipFirst, numberToSkipFirst + totalToTake)
+            subset.push(...itemsToAdd);
+        }
+        // before
+        let currentStartIndex = this.items.indexOf(subset[0]);
+        if (numberToSkipFirst > currentStartIndex){
+            //need to remove items from subset start
+            subset.splice(0,numberToSkipFirst - currentStartIndex);
+        } else if (numberToSkipFirst < currentStartIndex) {
+            //need to add more items to subset start
+            subset.splice(0,0, ...this.items.slice(numberToSkipFirst, currentStartIndex ));
+        }
+        // after
+        if (subset.length > totalToTake){
+            //too many on subset... truncate it
+            subset.splice(totalToTake, subset.length - totalToTake);
+        } else if (subset.length < totalToTake){
+            //not enough, need more from the original array
+            subset.push(...this.items.slice(numberToSkipFirst + subset.length, numberToSkipFirst + totalToTake));
+        }
+
+
+    }
+
+    private initialListDrawing(){
+
+        let subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20));
+        //var visibleBottom = visibleRect.top + visibleRect.height;
+        //var lastVisibleItemIndex = this.numItemsToSkipBefore + this.numItemsToShow + Math.ceil(visibleBottom / this.averageHeight);
+        //this.numItemsToShow = 20;
+        
+        //this.numItemsToSkipAfter = this.items.length - this.numItemsToSkipBefore - this.numItemsToShow;
+
+        let newVirtdata : IVirtualizedData<T> = {
+          subSetOfItems: subSetOfItems,
+          numItemsToSkipBefore:0,
+          numItemsToShow: Math.min(this.items.length, 20),
+          numItemsToSkipAfter: Math.max(0, this.items.length - 20)
+        };
+        this.virtualizedData = newVirtdata;
     }
 
     public disconnectedCallback() {
@@ -262,17 +430,17 @@ export class FluentList<T> extends FASTElement {
         this._async.dispose();
         this._events.dispose();
 
-        delete this._scrollElement;
+        //delete this._scrollElement;
     }
 
     private propertyChanged(needsReset: boolean):void {
         if (needsReset){
-            this._resetRequiredWindows();
-            this._requiredRect = null;
-      
-            this._measureVersion++;
-            this._invalidatePageCache();
-            this._updatePages();
+            // this._resetRequiredWindows();
+            // this._requiredRect = null;
+            this.initialListDrawing();
+            // this._measureVersion++;
+            // this._invalidatePageCache();
+            // this._updatePages();
             console.log("Reset pages again");
         }
         //console.log(JSON.stringify(this.items)); 
@@ -295,211 +463,189 @@ export class FluentList<T> extends FASTElement {
         }
       }
 
-    public forceUpdate(): void {
-        this._invalidatePageCache();
-        // Ensure that when the list is force updated we update the pages first before render.
-        this._updateRenderRects(true);
-        this._updatePages();
-        this._measureVersion++;
+    // public forceUpdate(): void {
+    //     this._invalidatePageCache();
+    //     // Ensure that when the list is force updated we update the pages first before render.
+    //     this._updateRenderRects(true);
+    //     this._updatePages();
+    //     this._measureVersion++;
         
-        //super.forceUpdate();
-      }
+    //     //super.forceUpdate();
+    //   }
 
-    private _onAsyncResize(): void {
-        this.forceUpdate();
-    }
+    // private _onAsyncResize(): void {
+    //     this.forceUpdate();
+    // }
     
     private _invalidatePageCache(): void {
         this._pageCache = {};
-      }
-
-    private _onScroll(): void {
-        if (!this.state.isScrolling && !this.ignoreScrollingState) {
-            this.stateChangedFunc=()=>{};
-            let tempState = this.state;
-            tempState.isScrolling=true;
-            this.state = tempState;
-        }
-        this._resetRequiredWindows();
-        this._onScrollingDone();
-      }
-
-    private _onScrollingDone(): void {
-        if (!this.ignoreScrollingState) {
-            this.stateChangedFunc=()=>{};
-            let tempState = this.state;
-            tempState.isScrolling=false;
-            this.state = tempState;
-        }
-        console.log("Scrolling DONE");
     }
-    
+
     private _resetRequiredWindows(): void {
         this._requiredWindowsAhead = 0;
         this._requiredWindowsBehind = 0;
     }
 
+    // private _updatePages(): void {
+    //     // console.log('updating pages');
+    
+    //     if (!this._requiredRect) {
+    //       this._updateRenderRects();
+    //     }
+    
+    //     const newListState = this._buildPages();
+    //     const oldListPages = this.state.pages!;
+    
+    //     this._notifyPageChanges(oldListPages, newListState.pages!);
+    
+    //     this.stateChangedFunc = (state)=> {
 
-    private _updatePages(): void {
-        // console.log('updating pages');
+    //         const finalState : IListState<T> = {measureVersion: state.measureVersion, pages: state.pages, isScrolling: state.isScrolling };
     
-        if (!this._requiredRect) {
-          this._updateRenderRects();
-        }
-    
-        const newListState = this._buildPages();
-        const oldListPages = this.state.pages!;
-    
-        this._notifyPageChanges(oldListPages, newListState.pages!);
-    
-        this.stateChangedFunc = (state)=> {
-
-            const finalState : IListState<T> = {measureVersion: state.measureVersion, pages: state.pages, isScrolling: state.isScrolling };
-    
-          // If we weren't provided with the page height, measure the pages
-          if (!this.getPageHeight) {
-            // If measured version is invalid since we've updated the DOM
-            const heightsChanged = this._updatePageMeasurements(finalState.pages!);
-    
-            // On first render, we should re-measure so that we don't get a visual glitch.
-            if (heightsChanged) {
-              this._materializedRect = null;
-              if (!this._hasCompletedFirstRender) {
-                this._hasCompletedFirstRender = true;
-                this._updatePages();
-              } else {
-                this._onAsyncScroll();
-              }
-            } else {
-              // Enqueue an idle bump.
-              this._onAsyncIdle();
-            }
-          } else {
-            // Enqueue an idle bump
-            this._onAsyncIdle();
-          }
-    
-          // Notify the caller that rendering the new pages has completed
-          if (this.onPagesUpdated) {
-            this.onPagesUpdated(finalState.pages as IPage2<T>[]);
-          }
-
-        };
-
-        this.state = newListState;
-        // if (newListState.measureVersion !== undefined)
-        //     this.measureVersion = newListState.measureVersion;
-        // if (newListState.isScrolling !== undefined)
-        //     this.isScrolling = newListState.isScrolling;
-        // if (newListState.pages)
-        //     this.pages = newListState.pages;
+    //         // If we weren't provided with the page height, measure the pages
+    //         if (!this.getPageHeight) {
+    //             // If measured version is invalid since we've updated the DOM
+    //             const heightsChanged = this._updatePageMeasurements(finalState.pages!);
         
-        //this.setState(newListState, () => {
-          // Multiple updates may have been queued, so the callback will reflect all of them.
-          // Re-fetch the current props and states to avoid using a stale props or state captured in the closure.
+    //             // On first render, we should re-measure so that we don't get a visual glitch.
+    //             if (heightsChanged) {
+    //                 this._materializedRect = null;
+    //                 if (!this._hasCompletedFirstRender) {
+    //                     this._hasCompletedFirstRender = true;
+    //                     this._updatePages();
+    //                 } else {
+    //                     this._onAsyncScroll();
+    //                 }
+    //             } else {
+    //                   // Enqueue an idle bump.
+    //                   this._onAsyncIdle();
+    //             }
+    //         } else {
+    //               // Enqueue an idle bump
+    //               this._onAsyncIdle();
+    //         }
+      
+    //         // Notify the caller that rendering the new pages has completed
+    //         if (this.onPagesUpdated) {
+    //           this.onPagesUpdated(finalState.pages as IPage2<T>[]);
+    //         }
+
+    //     };
+
+    //     this.state = newListState;
+    //     // if (newListState.measureVersion !== undefined)
+    //     //     this.measureVersion = newListState.measureVersion;
+    //     // if (newListState.isScrolling !== undefined)
+    //     //     this.isScrolling = newListState.isScrolling;
+    //     // if (newListState.pages)
+    //     //     this.pages = newListState.pages;
+        
+    //     //this.setState(newListState, () => {
+    //       // Multiple updates may have been queued, so the callback will reflect all of them.
+    //       // Re-fetch the current props and states to avoid using a stale props or state captured in the closure.
           
-        //});
-    }
+    //     //});
+    // }
 
     /**
    * Debounced method to asynchronously update the visible region on a scroll event.
    */
-    private _onAsyncScroll(): void {
-        this._updateRenderRects();
-        console.log("Scrolling!");
+    // private _onAsyncScroll(): void {
+    //     this._updateRenderRects();
+    //     console.log("Scrolling!");
 
-        // Only update pages when the visible rect falls outside of the materialized rect.
-        if (!this._materializedRect || !_isContainedWithin(this._requiredRect as IRectangle, this._materializedRect)) {
-            this._updatePages();
-        } else {
-            // console.log('requiredRect contained in materialized', this._requiredRect, this._materializedRect);
-        }
-    }
+    //     // Only update pages when the visible rect falls outside of the materialized rect.
+    //     if (!this._materializedRect || !_isContainedWithin(this._requiredRect as IRectangle, this._materializedRect)) {
+    //         this._updatePages();
+    //     } else {
+    //         // console.log('requiredRect contained in materialized', this._requiredRect, this._materializedRect);
+    //     }
+    // }
 
     /**
      * This is an async debounced method that will try and increment the windows we render. If we can increment
      * either, we increase the amount we render and re-evaluate.
      */
-    private _onAsyncIdle(): void {
-        //const { renderedWindowsAhead, renderedWindowsBehind } = this.props;
-        const { _requiredWindowsAhead: requiredWindowsAhead, _requiredWindowsBehind: requiredWindowsBehind } = this;
-        const windowsAhead = Math.min(this.renderedWindowsAhead as number, requiredWindowsAhead + 1);
-        const windowsBehind = Math.min(this.renderedWindowsBehind as number, requiredWindowsBehind + 1);
+    // private _onAsyncIdle(): void {
+    //     //const { renderedWindowsAhead, renderedWindowsBehind } = this.props;
+    //     const { _requiredWindowsAhead: requiredWindowsAhead, _requiredWindowsBehind: requiredWindowsBehind } = this;
+    //     const windowsAhead = Math.min(this.renderedWindowsAhead as number, requiredWindowsAhead + 1);
+    //     const windowsBehind = Math.min(this.renderedWindowsBehind as number, requiredWindowsBehind + 1);
 
-        console.log('idling', windowsBehind, windowsAhead);
-        if (windowsAhead !== requiredWindowsAhead || windowsBehind !== requiredWindowsBehind) {
+    //     console.log('idling', windowsBehind, windowsAhead);
+    //     if (windowsAhead !== requiredWindowsAhead || windowsBehind !== requiredWindowsBehind) {
              
 
-            this._requiredWindowsAhead = windowsAhead;
-            this._requiredWindowsBehind = windowsBehind;
-            this._updateRenderRects();
-            this._updatePages();
-        }
+    //         this._requiredWindowsAhead = windowsAhead;
+    //         this._requiredWindowsBehind = windowsBehind;
+    //         this._updateRenderRects();
+    //         this._updatePages();
+    //     }
 
-        if (this.renderedWindowsAhead! > windowsAhead || this.renderedWindowsBehind! > windowsBehind) {
-            // Async increment on next tick.
-            this._onAsyncIdle();
+    //     if (this.renderedWindowsAhead! > windowsAhead || this.renderedWindowsBehind! > windowsBehind) {
+    //         // Async increment on next tick.
+    //         this._onAsyncIdle();
             
-        }
-    }
+    //     }
+    // }
 
-    private _updateRenderRects(forceUpdate?: boolean): void {
+    // private _updateRenderRects(forceUpdate?: boolean): void {
         
-        // when not in virtualize mode, we render all items without measurement to optimize page rendering perf
-        if (!this._shouldVirtualize()) {
-          return;
-        }
+    //     // when not in virtualize mode, we render all items without measurement to optimize page rendering perf
+    //     if (!this._shouldVirtualize()) {
+    //       return;
+    //     }
     
-        let surfaceRect = this._surfaceRect || { ...EMPTY_RECT };
-        const scrollHeight = this._scrollElement && this._scrollElement.scrollHeight;
-        const scrollTop = this._scrollElement ? this._scrollElement.scrollTop : 0;
+    //     let surfaceRect = this._surfaceRect || { ...EMPTY_RECT };
+    //     const scrollHeight = this._scrollElement && this._scrollElement.scrollHeight;
+    //     const scrollTop = this._scrollElement ? this._scrollElement.scrollTop : 0;
     
-        // WARNING: EXPENSIVE CALL! We need to know the surface top relative to the window.
-        // This needs to be called to recalculate when new pages should be loaded.
-        // We check to see how far we've scrolled and if it's further than a third of a page we run it again.
-        if (
-          this._surface &&
-          (forceUpdate ||
-            !this.state.pages ||
-            !this._surfaceRect ||
-            !scrollHeight ||
-            scrollHeight !== this._scrollHeight ||
-            Math.abs(this._scrollTop - scrollTop) > this._estimatedPageHeight / 3)
-        ) {
-          surfaceRect = this._surfaceRect = _measureSurfaceRect(this._surface);
-          this._scrollTop = scrollTop;
-        }
+    //     // WARNING: EXPENSIVE CALL! We need to know the surface top relative to the window.
+    //     // This needs to be called to recalculate when new pages should be loaded.
+    //     // We check to see how far we've scrolled and if it's further than a third of a page we run it again.
+    //     if (
+    //       this._surface &&
+    //       (forceUpdate ||
+    //         !this.state.pages ||
+    //         !this._surfaceRect ||
+    //         !scrollHeight ||
+    //         scrollHeight !== this._scrollHeight ||
+    //         Math.abs(this._scrollTop - scrollTop) > this._estimatedPageHeight / 3)
+    //     ) {
+    //       surfaceRect = this._surfaceRect = _measureSurfaceRect(this._surface);
+    //       this._scrollTop = scrollTop;
+    //     }
     
-        // If the scroll height has changed, something in the container likely resized and
-        // we should redo the page heights incase their content resized.
-        if (forceUpdate || !scrollHeight || scrollHeight !== this._scrollHeight) {
-          this._measureVersion++;
-        }
+    //     // If the scroll height has changed, something in the container likely resized and
+    //     // we should redo the page heights incase their content resized.
+    //     if (forceUpdate || !scrollHeight || scrollHeight !== this._scrollHeight) {
+    //       this._measureVersion++;
+    //     }
     
-        this._scrollHeight = scrollHeight;
+    //     this._scrollHeight = scrollHeight;
     
-        // If the surface is above the container top or below the container bottom, or if this is not the first
-        // render return empty rect.
-        // The first time the list gets rendered we need to calculate the rectangle. The width of the list is
-        // used to calculate the width of the list items.
-        const visibleTop = Math.max(0, -surfaceRect.top);
-        const win = getWindow(this._root);
-        const visibleRect = {
-          top: visibleTop,
-          left: surfaceRect.left,
-          bottom: visibleTop + win!.innerHeight,
-          right: surfaceRect.right,
-          width: surfaceRect.width,
-          height: win!.innerHeight,
-        };
+    //     // If the surface is above the container top or below the container bottom, or if this is not the first
+    //     // render return empty rect.
+    //     // The first time the list gets rendered we need to calculate the rectangle. The width of the list is
+    //     // used to calculate the width of the list items.
+    //     const visibleTop = Math.max(0, -surfaceRect.top);
+    //     const win = getWindow(this._root);
+    //     const visibleRect = {
+    //       top: visibleTop,
+    //       left: surfaceRect.left,
+    //       bottom: visibleTop + win!.innerHeight,
+    //       right: surfaceRect.right,
+    //       width: surfaceRect.width,
+    //       height: win!.innerHeight,
+    //     };
     
-        // The required/allowed rects are adjusted versions of the visible rect.
-        this._requiredRect = _expandRect(visibleRect, this._requiredWindowsBehind, this._requiredWindowsAhead);
-        this._allowedRect = _expandRect(visibleRect, this.renderedWindowsBehind!, this.renderedWindowsAhead!);
+    //     // The required/allowed rects are adjusted versions of the visible rect.
+    //     this._requiredRect = _expandRect(visibleRect, this._requiredWindowsBehind, this._requiredWindowsAhead);
+    //     this._allowedRect = _expandRect(visibleRect, this.renderedWindowsBehind!, this.renderedWindowsAhead!);
     
-        // store the visible rect for later use.
-        this._visibleRect = visibleRect;
-    }
+    //     // store the visible rect for later use.
+    //     this._visibleRect = visibleRect;
+    // }
 
     private _updatePageMeasurements(pages: IPage2<T>[]): boolean {
         let heightChanged = false;

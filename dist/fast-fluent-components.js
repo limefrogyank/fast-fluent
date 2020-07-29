@@ -10656,7 +10656,7 @@ __decorate([observable], TreeView.prototype, "nested", void 0);
 
 __decorate([observable], TreeView.prototype, "slottedTreeItems", void 0);
 
-const LabelStyles = css` ${display("inline-block")} :host{font-family: var(--body-font);outline: none;user-select: none}:host(.disabled) label{opacity: var(--disabled-opacity)}:host(.required) label::after{content: ' *';color: #a4262c;padding-right: 12px}`;
+const LabelStyles = css` ${display("inline-block")} :host{font-family: var(--body-font);font-weight: var(--font-weight-semiBold);outline: none;user-select: none}:host(.disabled) label{opacity: var(--disabled-opacity)}:host(.required) label::after{content: ' *';color: #a4262c;padding-right: 12px}`;
 
 let FluentLabel = class FluentLabel extends FASTElement {
   requiredChanged() {
