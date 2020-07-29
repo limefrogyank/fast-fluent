@@ -267,45 +267,27 @@ export class FluentList<T> extends FASTElement {
     public connectedCallback() {
         super.connectedCallback();
         
-        //this._updatePages();
-        //this._measureVersion++;
-        //this._scrollElement = findScrollableParent(this._root) as HTMLElement;
-
-        //this._events.on(window, 'resize', this._onAsyncResize);
-        //if (this._root) { 
-        //    this._events.on(this._root, 'focus', this._onFocus, true);
-        //}
-        
-        
         //const rootMargin: number = 500;
         this.intersectionObserver = new IntersectionObserver((entries, observer) => {
-          //window.requestAnimationFrame(_=>{
             
-          entries.forEach(entry => {
-            //console.log("scrollTop (intersection):" + entry.isIntersecting +" " + this.scrollElement.scrollTop );
-            if (!entry.isIntersecting) {
-              return;
-            }
-      
-            const containerSize = entry.rootBounds?.height;
-      
-            if (entry.target === this.spacerBefore) {
-              this.onSpacerTrigger('before', entry.intersectionRect.top - entry.boundingClientRect.top, containerSize); 
-              //dotNetHelper.invokeMethodAsync('OnSpacerBeforeVisible', entry.intersectionRect.top - entry.boundingClientRect.top, containerSize);
-            } else if (entry.target === this.spacerAfter) {
-              console.log(entry.intersectionRect);
-              console.log(entry.boundingClientRect);
-
-              this.onSpacerTrigger('after', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, containerSize);
-              //dotNetHelper.invokeMethodAsync('OnSpacerAfterVisible', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, containerSize);
-            } else {
-              throw new Error('Unknown intersection target');
-            }
-         
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+        
+                const containerSize = entry.rootBounds?.height;
+        
+                if (entry.target === this.spacerBefore) {
+                    this.onSpacerTrigger('before', entry.intersectionRect.top - entry.boundingClientRect.top, containerSize); 
+                } else if (entry.target === this.spacerAfter) {
+                    this.onSpacerTrigger('after', entry.boundingClientRect.bottom - entry.intersectionRect.bottom, containerSize);
+                } else {
+                    throw new Error('Unknown intersection target');
+                }
+            
             });
-          //});
-          }, {
-            root: this.scrollElement, rootMargin: '0px'
+        }, {
+            root: this.scrollElement, rootMargin: '20px'
         });    
         this.intersectionObserver.observe(this.spacerBefore);
         this.intersectionObserver.observe(this.spacerAfter);

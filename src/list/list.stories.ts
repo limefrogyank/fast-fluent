@@ -25,6 +25,7 @@ let loadList = (firstList:HTMLElement):void =>{
     let items : any[] = [];
     for (var i = 0; i< 50; i++){
         items.push({value: i.toString()});
+        //items.push(i);
     }
 
     list.items = items;
@@ -43,7 +44,7 @@ export const List = () => {
         window.setTimeout(() =>{
             let firstlist = document.getElementById("firstList");
             if (firstlist !== null){
-                    loadList(firstlist);
+                loadList(firstlist);
             }
         },500);
     }
