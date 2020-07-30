@@ -1,2 +1,6 @@
 node_modules
 dist/
+blazorlib/bin/
+blazorlib/obj/
+test/clientside/bin/
+test/clientside/obj/
