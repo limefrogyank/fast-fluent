@@ -19,3 +19,6 @@ C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\BlazorFluentUi.
 C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\BlazorFluentUi.pdb
 C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\RazorDeclaration\BFUTextField.razor.g.cs
 C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\Razor\BFUTextField.razor.g.cs
+C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\RazorDeclaration\BFUList.razor.g.cs
+C:\Users\Lee\source\repos\fast-fluent\blazorlib\obj\Debug\net5.0\Razor\BFUList.razor.g.cs
+C:\Users\Lee\source\repos\fast-fluent\blazorlib\bin\Debug\net5.0\tsconfig.json

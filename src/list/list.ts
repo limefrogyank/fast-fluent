@@ -1,64 +1,66 @@
 import { attr, customElement, DOM, FASTElement,html, observable, Observable, ViewTemplate } from "@microsoft/fast-element";
-import {ListTemplate as template} from "./list.template";
+import { ListTemplate as template} from "./list.template";
 import { ListStyles as styles } from "./list.styles";
-import { Async, EventGroup, IRectangle, IPage, IPageSpecification, getParent, getWindow, findIndex } from "@fluentui/react";
-import { findScrollableParent } from "../utilities/scroll";
+import { IVirtualizedData } from "./interface";
+//import { Async, EventGroup, IRectangle, IPage, IPageSpecification, getParent, getWindow, findIndex } from "@fluentui/react";
 
-const EMPTY_RECT = {
-    top: -1,
-    bottom: -1,
-    left: -1,
-    right: -1,
-    width: 0,
-    height: 0,
-};
 
-interface IVirtualizedData<T> {
-    subSetOfItems: T[];
-    numItemsToSkipBefore: number;
-    numItemsToSkipAfter: number;    
-    numItemsToShow: number;
-}
+// const EMPTY_RECT = {
+//     top: -1,
+//     bottom: -1,
+//     left: -1,
+//     right: -1,
+//     width: 0,
+//     height: 0,
+// };
 
-interface IPage2<T> extends IPage<T>{
-    getKey?: (item: T, index?: number) => string;
-    onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
-}
+
+// interface IPage2<T> extends IPage<T>{
+//     getKey?: (item: T, index?: number) => string;
+//     onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
+// }
 
 // Naming expensive measures so that they're named in profiles.
-const _measurePageRect = (element: HTMLElement) => element.getBoundingClientRect();
-const _measureSurfaceRect = _measurePageRect;
-const _measureScrollRect = _measurePageRect;
+// const _measurePageRect = (element: HTMLElement) => element.getBoundingClientRect();
+// const _measureSurfaceRect = _measurePageRect;
+// const _measureScrollRect = _measurePageRect;
 
-interface IPageCacheItem<T> {
-    page: IPage2<T>;
-    pageElement?: JSX.Element;
-}
+// interface IPageCacheItem<T> {
+//     page: IPage2<T>;
+//     pageElement?: JSX.Element;
+// }
 
-interface IPageCache<T> {
-    [key: string]: IPageCacheItem<T>;
-}
+// interface IPageCache<T> {
+//     [key: string]: IPageCacheItem<T>;
+// }
   
-interface IListState<T = any> {
-    pages: IPage2<T>[];
+// interface IListState<T = any> {
+//     pages: IPage2<T>[];
   
-    /** The last versionstamp for  */
-    measureVersion?: number;
-    isScrolling?: boolean;
-}
+//     /** The last versionstamp for  */
+//     measureVersion?: number;
+//     isScrolling?: boolean;
+// }
 
-const RESIZE_DELAY = 16;
-const MIN_SCROLL_UPDATE_DELAY = 100;
-const MAX_SCROLL_UPDATE_DELAY = 500;
-const IDLE_DEBOUNCE_DELAY = 200;
-// The amount of time to wait before declaring that the list isn't scrolling
-const DONE_SCROLLING_WAIT = 500;
-const DEFAULT_ITEMS_PER_PAGE = 10;
-const DEFAULT_PAGE_HEIGHT = 30;
-const DEFAULT_RENDERED_WINDOWS_BEHIND = 2;
-const DEFAULT_RENDERED_WINDOWS_AHEAD = 2;
-const PAGE_KEY_PREFIX = 'page-';
-const SPACER_KEY_PREFIX = 'spacer-';
+// const RESIZE_DELAY = 16;
+// const MIN_SCROLL_UPDATE_DELAY = 100;
+// const MAX_SCROLL_UPDATE_DELAY = 500;
+// const IDLE_DEBOUNCE_DELAY = 200;
+// // The amount of time to wait before declaring that the list isn't scrolling
+// const DONE_SCROLLING_WAIT = 500;
+// const DEFAULT_ITEMS_PER_PAGE = 10;
+// const DEFAULT_PAGE_HEIGHT = 30;
+// const DEFAULT_RENDERED_WINDOWS_BEHIND = 2;
+// const DEFAULT_RENDERED_WINDOWS_AHEAD = 2;
+// const PAGE_KEY_PREFIX = 'page-';
+// const SPACER_KEY_PREFIX = 'spacer-';
+
+// interface IVirtualizedData<T> {
+//     subSetOfItems: T[];
+//     numItemsToSkipBefore: number;
+//     numItemsToSkipAfter: number;    
+//     numItemsToShow: number;
+// }
 
 
 @customElement({
@@ -74,8 +76,8 @@ export class FluentList<T> extends FASTElement {
     //@observable
     public onShouldVirtualize: (list: FluentList<T>) => boolean;
 
-    //@observable
-    public getPageHeight?: (itemIndex?: number, visibleRect?: IRectangle, itemCount?: number) => number;
+    // //@observable
+    // public getPageHeight?: (itemIndex?: number, visibleRect?: IRectangle, itemCount?: number) => number;
 
           /**
     * Called by the list to get the specification for a page.
@@ -84,14 +86,14 @@ export class FluentList<T> extends FASTElement {
     * The list will use this to optimize virtualization.
     */
     //@observable
-    public getPageSpecification?: (itemIndex?: number, visibleRect?: IRectangle) => IPageSpecification;
+    //public getPageSpecification?: (itemIndex?: number, visibleRect?: IRectangle) => IPageSpecification;
     
     /**
     * Method called by the list to get how many items to render per page from specified index.
     * In general, use `getPageSpecification` instead.
     */
     //@observable
-    public getItemCountForPage?: ((itemIndex?: number, visibleRect?: IRectangle) => number) | undefined;
+    //public getItemCountForPage?: ((itemIndex?: number, visibleRect?: IRectangle) => number) | undefined;
 
     public getKey?: (item: T, index?: number) => string;
 
@@ -101,19 +103,19 @@ export class FluentList<T> extends FASTElement {
 
     @observable 
     public items:T[];
-    private itemsChanged(oldValue: IListState<T>, newValue: IListState<T>) {
-        this.propertyChanged(true);
+    private itemsChanged(oldValue: T[], newValue: T[]) {
+         this.propertyChanged(true);
     }
     // @observable
     // public measureVersion?: number; 
 
     /** Optional callback for monitoring when a page is added. */
-    @observable
-    public onPageAdded?: (page: IPage2<T>) => void;
+    // @observable
+    // public onPageAdded?: (page: IPage2<T>) => void;
 
-    /** Optional callback for monitoring when a page is removed. */
-    @observable
-    public onPageRemoved?: (page: IPage2<T>) => void;
+    // /** Optional callback for monitoring when a page is removed. */
+    // @observable
+    // public onPageRemoved?: (page: IPage2<T>) => void;
     /**
     * Optional callback invoked when List rendering completed.
     * This can be on initial mount or on re-render due to scrolling.
@@ -122,21 +124,21 @@ export class FluentList<T> extends FASTElement {
     * To track individual page Add / Remove use onPageAdded / onPageRemoved instead.
     * @param pages - The current array of pages in the List.
     */
-    @observable
-    public onPagesUpdated?: (pages: IPage2<T>[]) => void;
+    // @observable
+    // public onPagesUpdated?: (pages: IPage2<T>[]) => void;
 
     @observable
     public onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
 
     // @observable
     // public pages?: IPage2<T>[];
-    @observable
-    public state: IListState<T>;
-    private stateChanged(oldValue: IListState<T>, newValue: IListState<T>) {
-        if (this.stateChangedFunc)
-            this.stateChangedFunc(newValue);
-    }
-    private stateChangedFunc : (state: IListState<T>) => void;
+    // @observable
+    // public state: IListState<T>;
+    // private stateChanged(oldValue: IListState<T>, newValue: IListState<T>) {
+    //     if (this.stateChangedFunc)
+    //         this.stateChangedFunc(newValue);
+    // }
+    // private stateChangedFunc : (state: IListState<T>) => void;
 
       /**
     * Whether to disable scroll state updates. This causes the isScrolling arg in onRenderCell to always be undefined.
@@ -158,22 +160,22 @@ export class FluentList<T> extends FASTElement {
     public startIndex?:number = 0;
     
     // The visible rect that we're required to render given the current list state.
-    private _requiredRect: IRectangle | null;
+    // private _requiredRect: IRectangle | null;
       
-    // surface rect relative to window
-    private _surfaceRect: IRectangle | undefined;
+    // // surface rect relative to window
+    // private _surfaceRect: IRectangle | undefined;
 
-    // The visible rect that we're allowed to keep rendered. Pages outside of this rect will be removed.
-    private _allowedRect: IRectangle;
+    // // The visible rect that we're allowed to keep rendered. Pages outside of this rect will be removed.
+    // private _allowedRect: IRectangle;
 
-    // The rect that is visible to the user
-    private _visibleRect: IRectangle | undefined;
+    // // The rect that is visible to the user
+    // private _visibleRect: IRectangle | undefined;
 
     // materialized rect around visible items, relative to surface
-    private _materializedRect: IRectangle | null;
+    // private _materializedRect: IRectangle | null;
 
-    private _async: Async;
-    private _events: EventGroup;
+    // private _async: Async;
+    // private _events: EventGroup;
 
 
 
@@ -191,6 +193,8 @@ export class FluentList<T> extends FASTElement {
     @observable
     virtualizedData: IVirtualizedData<T> = {subSetOfItems:[], numItemsToShow:20, numItemsToSkipAfter:0,numItemsToSkipBefore:0};
 
+    queuedData: IVirtualizedData<T>;
+
     // @observable
     // subSetOfItems: T[];
     // @observable
@@ -202,7 +206,7 @@ export class FluentList<T> extends FASTElement {
 
     @observable
     _refs:Node[];
-
+ 
     //_scrollElement: HTMLElement;
     _surface: HTMLDivElement;
     _root: HTMLDivElement;
@@ -211,7 +215,7 @@ export class FluentList<T> extends FASTElement {
     private _measureVersion: number;
     private _scrollHeight: number;
     private _scrollTop: number;
-    private _pageCache: IPageCache<T>;
+    //private _pageCache: IPageCache<T>;
 
     private _estimatedPageHeight: number;
     private _totalEstimates: number;
@@ -230,11 +234,11 @@ export class FluentList<T> extends FASTElement {
     constructor(){
         super();
 
-        this.state = { pages:[]};
-        this.state.isScrolling = false;
+        // this.state = { pages:[]};
+        // this.state.isScrolling = false;
 
-        this._async = new Async(this);
-        this._events = new EventGroup(this);
+        // this._async = new Async(this);
+        // this._events = new EventGroup(this);
 
         this._estimatedPageHeight = 0;
         this._totalEstimates = 0;
@@ -259,7 +263,7 @@ export class FluentList<T> extends FASTElement {
         this._cachedPageHeights = {};
         this._estimatedPageHeight = 0;
         this._focusedIndex = -1;
-        this._pageCache = {};
+        //this._pageCache = {};
         //this.getPageSpecification=undefined;
         this.onRenderCell = (a,b,c) => html<T>`${x=>x}`;
     }
@@ -269,7 +273,7 @@ export class FluentList<T> extends FASTElement {
         
         //const rootMargin: number = 500;
         this.intersectionObserver = new IntersectionObserver((entries, observer) => {
-            
+            //DOM.queueUpdate(() => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) {
                     return;
@@ -286,6 +290,7 @@ export class FluentList<T> extends FASTElement {
                 }
             
             });
+        //});
         }, {
             root: this.scrollElement, rootMargin: '20px'
         });    
@@ -294,21 +299,21 @@ export class FluentList<T> extends FASTElement {
 
         // After each render, refresh the info about intersections
         this.mutationObserverBefore = new MutationObserver(mutations => {
-          DOM.queueUpdate(_=>{
+          //DOM.queueUpdate(_=>{
             this.intersectionObserver.unobserve(this.spacerBefore);
             this.intersectionObserver.observe(this.spacerBefore);
-          });
+          //});
         });
 
         this.mutationObserverAfter = new MutationObserver(mutations => {
-          DOM.queueUpdate(_=>{
+          //DOM.queueUpdate(_=>{
             this.intersectionObserver.unobserve(this.spacerAfter);
             this.intersectionObserver.observe(this.spacerAfter);
-          });
+          //});
         });
 
-        this.mutationObserverBefore.observe(this.spacerBefore, { attributes: true });
-        this.mutationObserverAfter.observe(this.spacerAfter, { attributes: true });
+        //this.mutationObserverBefore.observe(this.spacerBefore, { attributes: true });
+        //this.mutationObserverAfter.observe(this.spacerAfter, { attributes: true });
         
         
     }
@@ -320,8 +325,7 @@ export class FluentList<T> extends FASTElement {
         numItemsToShow = Math.max(0, Math.min(numItemsToShow, itemCount));
 
         if (spacerType == "before" )
-        {
-
+        {            
             let numItemsToSkipBefore = Math.max(0, Math.floor(spacerSize / this.averageHeight) - 1);
             let numItemsToSkipAfter =  Math.max(0,itemCount - numItemsToShow - numItemsToSkipBefore);
 
@@ -337,12 +341,19 @@ export class FluentList<T> extends FASTElement {
             if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore ||
               newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter ||
               newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow){
+                 
                     this.virtualizedData = newVirtdata;
+                
               }
+              this.intersectionObserver.unobserve(this.spacerBefore);
+              this.intersectionObserver.observe(this.spacerBefore);
+            //});
         }
         else if (spacerType == "after" )
         {
-
+            //DOM.queueUpdate(()=>{
+               
+           
             let numItemsToSkipAfter = Math.max(0, Math.floor(spacerSize / this.averageHeight) - 1);
             let numItemsToSkipBefore = Math.max(0, itemCount - numItemsToShow - numItemsToSkipAfter);
 
@@ -354,16 +365,28 @@ export class FluentList<T> extends FASTElement {
                 numItemsToShow:numItemsToShow,
                 numItemsToSkipAfter:numItemsToSkipAfter
             };
+            
             if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore ||
                 newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter ||
                 newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow){
+
+                  //  DOM.queueUpdate(()=>{
                     this.virtualizedData = newVirtdata;
+                //});
               }
+
+              this.intersectionObserver.unobserve(this.spacerAfter);
+              this.intersectionObserver.observe(this.spacerAfter);
+            //});
         }
   
     }
 
     private changeSubset(totalToTake:number, numberToSkipFirst:number, subset:T[]){
+        
+        if (this.items === undefined){
+            return;
+        }
         if (subset.length == 0 && this.items !== undefined) {
             var itemsToAdd = this.items.slice(numberToSkipFirst, numberToSkipFirst + totalToTake)
             subset.push(...itemsToAdd);
@@ -391,7 +414,16 @@ export class FluentList<T> extends FASTElement {
 
     private initialListDrawing(){
 
-        let subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20));
+        let subSetOfItems: T[];
+        let numItemsToShow = 0;
+        let numItemsToSkipAfter = 0;
+        if (this.items != undefined) {
+            subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20));
+            numItemsToShow = Math.min(this.items.length, 20);
+            numItemsToSkipAfter = Math.max(0, this.items.length - 20);
+        } else{
+            subSetOfItems = [];
+        }
         //var visibleBottom = visibleRect.top + visibleRect.height;
         //var lastVisibleItemIndex = this.numItemsToSkipBefore + this.numItemsToShow + Math.ceil(visibleBottom / this.averageHeight);
         //this.numItemsToShow = 20;
@@ -401,16 +433,16 @@ export class FluentList<T> extends FASTElement {
         let newVirtdata : IVirtualizedData<T> = {
           subSetOfItems: subSetOfItems,
           numItemsToSkipBefore:0,
-          numItemsToShow: Math.min(this.items.length, 20),
-          numItemsToSkipAfter: Math.max(0, this.items.length - 20)
+          numItemsToShow: numItemsToShow,
+          numItemsToSkipAfter: numItemsToSkipAfter
         };
         this.virtualizedData = newVirtdata;
     }
 
     public disconnectedCallback() {
         super.disconnectedCallback();
-        this._async.dispose();
-        this._events.dispose();
+        // this._async.dispose();
+        // this._events.dispose();
 
         //delete this._scrollElement;
     }
@@ -441,7 +473,7 @@ export class FluentList<T> extends FASTElement {
             break;
           }
     
-          target = getParent(target) as HTMLElement;
+          //target = getParent(target) as HTMLElement;
         }
       }
 
@@ -459,9 +491,9 @@ export class FluentList<T> extends FASTElement {
     //     this.forceUpdate();
     // }
     
-    private _invalidatePageCache(): void {
-        this._pageCache = {};
-    }
+    // private _invalidatePageCache(): void {
+    //     this._pageCache = {};
+    // }
 
     private _resetRequiredWindows(): void {
         this._requiredWindowsAhead = 0;
@@ -629,274 +661,274 @@ export class FluentList<T> extends FASTElement {
     //     this._visibleRect = visibleRect;
     // }
 
-    private _updatePageMeasurements(pages: IPage2<T>[]): boolean {
-        let heightChanged = false;
+    // private _updatePageMeasurements(pages: IPage2<T>[]): boolean {
+    //     let heightChanged = false;
     
-        // when not in virtualize mode, we render all the items without page measurement
-        if (!this._shouldVirtualize()) {
-          return heightChanged;
-        }
+    //     // when not in virtualize mode, we render all the items without page measurement
+    //     if (!this._shouldVirtualize()) {
+    //       return heightChanged;
+    //     }
     
-        for (let i = 0; i < pages.length; i++) {
-          const page = pages[i];
+    //     for (let i = 0; i < pages.length; i++) {
+    //       const page = pages[i];
     
-          if (page.items) {
-            heightChanged = this._measurePage(page) || heightChanged;
-          }
-        }
+    //       if (page.items) {
+    //         heightChanged = this._measurePage(page) || heightChanged;
+    //       }
+    //     }
 
-        //console.log("pageHeight " + heightChanged);
-        //console.log(this._cachedPageHeights);
+    //     //console.log("pageHeight " + heightChanged);
+    //     //console.log(this._cachedPageHeights);
     
-        return heightChanged;
-      }
+    //     return heightChanged;
+    //   }
     
-    private _measurePage(page: IPage2<T>): boolean {
-        let hasChangedHeight = false;
-        // eslint-disable-next-line react/no-string-refs
-        //console.log("ref length: " + this._refs.length);
-        //this._refs.forEach(x=> console.log(x));
-        const pageElement = this._refs.find(x=> (x as HTMLElement)?.dataset?.pageKey == page.key) as HTMLElement;
-        const cachedHeight = this._cachedPageHeights[page.startIndex];
+    // private _measurePage(page: IPage2<T>): boolean {
+    //     let hasChangedHeight = false;
+    //     // eslint-disable-next-line react/no-string-refs
+    //     //console.log("ref length: " + this._refs.length);
+    //     //this._refs.forEach(x=> console.log(x));
+    //     const pageElement = this._refs.find(x=> (x as HTMLElement)?.dataset?.pageKey == page.key) as HTMLElement;
+    //     const cachedHeight = this._cachedPageHeights[page.startIndex];
     
-        // console.log('   * measure attempt', page.startIndex, cachedHeight);
-        //console.log("wanted pageKey: " + page.key);
-        //console.log("pageElement: " + pageElement);
-        if (
-          pageElement &&
-          this._shouldVirtualize() &&
-          (!cachedHeight || cachedHeight.measureVersion !== this._measureVersion)
-        ) {
-          const newClientRect = {
-            width: pageElement.clientWidth,
-            height: pageElement.clientHeight,
-          };
+    //     // console.log('   * measure attempt', page.startIndex, cachedHeight);
+    //     //console.log("wanted pageKey: " + page.key);
+    //     //console.log("pageElement: " + pageElement);
+    //     if (
+    //       pageElement &&
+    //       this._shouldVirtualize() &&
+    //       (!cachedHeight || cachedHeight.measureVersion !== this._measureVersion)
+    //     ) {
+    //       const newClientRect = {
+    //         width: pageElement.clientWidth,
+    //         height: pageElement.clientHeight,
+    //       };
     
-          if (newClientRect.height || newClientRect.width) {
-            hasChangedHeight = page.height !== newClientRect.height;
+    //       if (newClientRect.height || newClientRect.width) {
+    //         hasChangedHeight = page.height !== newClientRect.height;
     
-            // console.warn(' *** expensive page measure', page.startIndex, page.height, newClientRect.height);
+    //         // console.warn(' *** expensive page measure', page.startIndex, page.height, newClientRect.height);
     
-            page.height = newClientRect.height;
+    //         page.height = newClientRect.height;
             
     
-            this._cachedPageHeights[page.startIndex] = {
-              height: newClientRect.height,
-              measureVersion: this._measureVersion,
-            };
+    //         this._cachedPageHeights[page.startIndex] = {
+    //           height: newClientRect.height,
+    //           measureVersion: this._measureVersion,
+    //         };
 
-            this._estimatedPageHeight = Math.round(
-              (this._estimatedPageHeight * this._totalEstimates + newClientRect.height) / (this._totalEstimates + 1),
-            );
+    //         this._estimatedPageHeight = Math.round(
+    //           (this._estimatedPageHeight * this._totalEstimates + newClientRect.height) / (this._totalEstimates + 1),
+    //         );
             
     
-            this._totalEstimates++;
-          }
+    //         this._totalEstimates++;
+    //       }
          
-        }
+    //     }
     
-        return hasChangedHeight;
-      }
+    //     return hasChangedHeight;
+    //   }
     
 
-    private _buildPages(): IListState<T> {
-        //let { renderCount } = props;
-        //const { items, startIndex, getPageHeight } = props;
+    // private _buildPages(): IListState<T> {
+    //     //let { renderCount } = props;
+    //     //const { items, startIndex, getPageHeight } = props;
             
-        let renderCount = this._getRenderCount();
+    //     let renderCount = this._getRenderCount();
     
-        const materializedRect = { ...EMPTY_RECT };
-        const pages: IPage2<T>[] = [];
+    //     const materializedRect = { ...EMPTY_RECT };
+    //     const pages: IPage2<T>[] = [];
     
-        let itemsPerPage = 1;
-        let pageTop = 0;
-        let currentSpacer : IPage2<T>|null = null;
-        const focusedIndex = this._focusedIndex;
-        const endIndex = this.startIndex! + renderCount;
-        const shouldVirtualize = this._shouldVirtualize();
+    //     let itemsPerPage = 1;
+    //     let pageTop = 0;
+    //     let currentSpacer : IPage2<T>|null = null;
+    //     const focusedIndex = this._focusedIndex;
+    //     const endIndex = this.startIndex! + renderCount;
+    //     const shouldVirtualize = this._shouldVirtualize();
     
-        // First render is very important to track; when we render cells, we have no idea of estimated page height.
-        // So we should default to rendering only the first page so that we can get information.
-        // However if the user provides a measure function, let's just assume they know the right heights.
-        const isFirstRender = this._estimatedPageHeight === 0 && !this.getPageHeight;
+    //     // First render is very important to track; when we render cells, we have no idea of estimated page height.
+    //     // So we should default to rendering only the first page so that we can get information.
+    //     // However if the user provides a measure function, let's just assume they know the right heights.
+    //     const isFirstRender = this._estimatedPageHeight === 0 && !this.getPageHeight;
     
-        const allowedRect = this._allowedRect;
+    //     const allowedRect = this._allowedRect;
     
-        //console.log("s " + this.startIndex + " e " + endIndex);
-        for (let itemIndex = this.startIndex!; itemIndex < endIndex; itemIndex += itemsPerPage) {
-            //console.log(itemIndex);
-            const pageSpecification = this._getPageSpecification(itemIndex, allowedRect);
-            const pageHeight = pageSpecification.height;
-            const pageData = pageSpecification.data;
-            const key = pageSpecification.key;
+    //     //console.log("s " + this.startIndex + " e " + endIndex);
+    //     for (let itemIndex = this.startIndex!; itemIndex < endIndex; itemIndex += itemsPerPage) {
+    //         //console.log(itemIndex);
+    //         const pageSpecification = this._getPageSpecification(itemIndex, allowedRect);
+    //         const pageHeight = pageSpecification.height;
+    //         const pageData = pageSpecification.data;
+    //         const key = pageSpecification.key;
         
-            itemsPerPage = pageSpecification.itemCount;
+    //         itemsPerPage = pageSpecification.itemCount;
         
-            const pageBottom = pageTop + pageHeight - 1;
+    //         const pageBottom = pageTop + pageHeight - 1;
         
-            const isPageRendered =
-                findIndex(this.state.pages as IPage2<T>[], (page: IPage2<T>) => !!page.items && page.startIndex === itemIndex) >
-                -1;
-            const isPageInAllowedRange = !allowedRect || (pageBottom >= allowedRect.top && pageTop <= allowedRect.bottom!);
-            const isPageInRequiredRange =
-                !this._requiredRect || (pageBottom >= this._requiredRect.top && pageTop <= this._requiredRect.bottom!);
-            const isPageVisible =
-                (!isFirstRender && (isPageInRequiredRange || (isPageInAllowedRange && isPageRendered))) || !shouldVirtualize;
-            const isPageFocused = focusedIndex >= itemIndex && focusedIndex < itemIndex + itemsPerPage;
-            const isFirstPage = itemIndex === this.startIndex;
+    //         const isPageRendered =
+    //             findIndex(this.state.pages as IPage2<T>[], (page: IPage2<T>) => !!page.items && page.startIndex === itemIndex) >
+    //             -1;
+    //         const isPageInAllowedRange = !allowedRect || (pageBottom >= allowedRect.top && pageTop <= allowedRect.bottom!);
+    //         const isPageInRequiredRange =
+    //             !this._requiredRect || (pageBottom >= this._requiredRect.top && pageTop <= this._requiredRect.bottom!);
+    //         const isPageVisible =
+    //             (!isFirstRender && (isPageInRequiredRange || (isPageInAllowedRange && isPageRendered))) || !shouldVirtualize;
+    //         const isPageFocused = focusedIndex >= itemIndex && focusedIndex < itemIndex + itemsPerPage;
+    //         const isFirstPage = itemIndex === this.startIndex;
         
-            // console.log('building page', itemIndex, 'pageTop: ' + pageTop, 'inAllowed: ' +
-            // isPageInAllowedRange, 'inRequired: ' + isPageInRequiredRange);
+    //         // console.log('building page', itemIndex, 'pageTop: ' + pageTop, 'inAllowed: ' +
+    //         // isPageInAllowedRange, 'inRequired: ' + isPageInRequiredRange);
         
-            // Only render whats visible, focused, or first page,
-            // or when running in fast rendering mode (not in virtualized mode), we render all current items in pages
-            if (isPageVisible || isPageFocused || isFirstPage) {
-                if (currentSpacer) {
-                    pages.push(currentSpacer);
-                    currentSpacer = null;
-                }
+    //         // Only render whats visible, focused, or first page,
+    //         // or when running in fast rendering mode (not in virtualized mode), we render all current items in pages
+    //         if (isPageVisible || isPageFocused || isFirstPage) {
+    //             if (currentSpacer) {
+    //                 pages.push(currentSpacer);
+    //                 currentSpacer = null;
+    //             }
     
-                const itemsInPage = Math.min(itemsPerPage, endIndex - itemIndex);
-                const newPage = this._createPage(
-                    key,
-                    this.items!.slice(itemIndex, itemIndex + itemsInPage),
-                    itemIndex,
-                    undefined,
-                    undefined,
-                    pageData,
-                );
+    //             const itemsInPage = Math.min(itemsPerPage, endIndex - itemIndex);
+    //             const newPage = this._createPage(
+    //                 key,
+    //                 this.items!.slice(itemIndex, itemIndex + itemsInPage),
+    //                 itemIndex,
+    //                 undefined,
+    //                 undefined,
+    //                 pageData,
+    //             );
         
-                newPage.top = pageTop;
-                newPage.height = pageHeight;
+    //             newPage.top = pageTop;
+    //             newPage.height = pageHeight;
                 
-                if (this._visibleRect && this._visibleRect.bottom) {
-                    newPage.isVisible = pageBottom >= this._visibleRect.top && pageTop <= this._visibleRect.bottom;
-                }
+    //             if (this._visibleRect && this._visibleRect.bottom) {
+    //                 newPage.isVisible = pageBottom >= this._visibleRect.top && pageTop <= this._visibleRect.bottom;
+    //             }
         
-                pages.push(newPage);
+    //             pages.push(newPage);
         
-                if (isPageInRequiredRange && this._allowedRect) {
-                    _mergeRect(materializedRect, {
-                        top: pageTop,
-                        bottom: pageBottom,
-                        height: pageHeight,
-                        left: allowedRect.left,
-                        right: allowedRect.right,
-                        width: allowedRect.width,
-                    });
-                }
-            } else {
-                if (!currentSpacer) {
-                    currentSpacer = this._createPage(
-                        SPACER_KEY_PREFIX + itemIndex,
-                        undefined,
-                        itemIndex,
-                        0,
-                        undefined,
-                        pageData,
-                        true /*isSpacer*/,
-                    );
-                }
-                currentSpacer.height = (currentSpacer.height || 0) + (pageBottom - pageTop) + 1;
-                currentSpacer.itemCount += itemsPerPage;
-          }
-          pageTop += pageBottom - pageTop + 1;
+    //             if (isPageInRequiredRange && this._allowedRect) {
+    //                 _mergeRect(materializedRect, {
+    //                     top: pageTop,
+    //                     bottom: pageBottom,
+    //                     height: pageHeight,
+    //                     left: allowedRect.left,
+    //                     right: allowedRect.right,
+    //                     width: allowedRect.width,
+    //                 });
+    //             }
+    //         } else {
+    //             if (!currentSpacer) {
+    //                 currentSpacer = this._createPage(
+    //                     SPACER_KEY_PREFIX + itemIndex,
+    //                     undefined,
+    //                     itemIndex,
+    //                     0,
+    //                     undefined,
+    //                     pageData,
+    //                     true /*isSpacer*/,
+    //                 );
+    //             }
+    //             currentSpacer.height = (currentSpacer.height || 0) + (pageBottom - pageTop) + 1;
+    //             currentSpacer.itemCount += itemsPerPage;
+    //       }
+    //       pageTop += pageBottom - pageTop + 1;
     
-            // in virtualized mode, we render need to render first page then break and measure,
-            // otherwise, we render all items without measurement to make rendering fast
-            if (isFirstRender && shouldVirtualize) {
-                break;
-            }
-        }
+    //         // in virtualized mode, we render need to render first page then break and measure,
+    //         // otherwise, we render all items without measurement to make rendering fast
+    //         if (isFirstRender && shouldVirtualize) {
+    //             break;
+    //         }
+    //     }
     
-        if (currentSpacer) {
-            currentSpacer.key = SPACER_KEY_PREFIX + 'end';
-            pages.push(currentSpacer);
-        }
+    //     if (currentSpacer) {
+    //         currentSpacer.key = SPACER_KEY_PREFIX + 'end';
+    //         pages.push(currentSpacer);
+    //     }
     
-        this._materializedRect = materializedRect;
+    //     this._materializedRect = materializedRect;
     
-        // console.log('materialized: ', materializedRect);
-        return {
-            pages: pages,
-            measureVersion: this._measureVersion,
-        };
-    }
+    //     // console.log('materialized: ', materializedRect);
+    //     return {
+    //         pages: pages,
+    //         measureVersion: this._measureVersion,
+    //     };
+    // }
 
-    private _createPage(
-        pageKey: string | undefined,
-        items: any[] | undefined,
-        startIndex: number = -1,
-        count: number = items ? items.length : 0,
-        style: React.CSSProperties = {},
-        data?: any,
-        isSpacer?: boolean,
-      ): IPage2<T> {
-        pageKey = pageKey || PAGE_KEY_PREFIX + startIndex;
-        const cachedPage = this._pageCache[pageKey];
-        if (cachedPage && cachedPage.page) {
-          return cachedPage.page;
-        }
+    // private _createPage(
+    //     pageKey: string | undefined,
+    //     items: any[] | undefined,
+    //     startIndex: number = -1,
+    //     count: number = items ? items.length : 0,
+    //     style: React.CSSProperties = {},
+    //     data?: any,
+    //     isSpacer?: boolean,
+    //   ): IPage2<T> {
+    //     pageKey = pageKey || PAGE_KEY_PREFIX + startIndex;
+    //     const cachedPage = this._pageCache[pageKey];
+    //     if (cachedPage && cachedPage.page) {
+    //       return cachedPage.page;
+    //     }
     
-        return {
-          key: pageKey,
-          startIndex: startIndex,
-          itemCount: count,
-          items: items,
-          style: style,
-          top: 0,
-          height: 0,
-          data: data,
-          isSpacer: isSpacer || false,
-          getKey: this.getKey,
-          onRenderCell:this.onRenderCell
-        };
-      }
+    //     return {
+    //       key: pageKey,
+    //       startIndex: startIndex,
+    //       itemCount: count,
+    //       items: items,
+    //       style: style,
+    //       top: 0,
+    //       height: 0,
+    //       data: data,
+    //       isSpacer: isSpacer || false,
+    //       getKey: this.getKey,
+    //       onRenderCell:this.onRenderCell
+    //     };
+    //   }
 
-    private _notifyPageChanges(oldPages: IPage2<T>[], newPages: IPage2<T>[]): void {
+    // private _notifyPageChanges(oldPages: IPage2<T>[], newPages: IPage2<T>[]): void {
         
-        // if (this.onPageAdded || this.onPageRemoved) {
-        //     const renderedIndexes: {
-        //     [index: number]: IPage2<T>;
-        //     } = {};
+    //     // if (this.onPageAdded || this.onPageRemoved) {
+    //     //     const renderedIndexes: {
+    //     //     [index: number]: IPage2<T>;
+    //     //     } = {};
 
-        //     for (const page of oldPages) {
-        //     if (page.items) {
-        //         renderedIndexes[page.startIndex] = page;
-        //     }
-        //     }
+    //     //     for (const page of oldPages) {
+    //     //     if (page.items) {
+    //     //         renderedIndexes[page.startIndex] = page;
+    //     //     }
+    //     //     }
 
-        //     for (const page of newPages) {
-        //     if (page.items) {
-        //         if (!renderedIndexes[page.startIndex]) {
-        //         this._onPageAdded(page);
-        //         } else {
-        //         delete renderedIndexes[page.startIndex];
-        //         }
-        //     }
-        //     }
+    //     //     for (const page of newPages) {
+    //     //     if (page.items) {
+    //     //         if (!renderedIndexes[page.startIndex]) {
+    //     //         this._onPageAdded(page);
+    //     //         } else {
+    //     //         delete renderedIndexes[page.startIndex];
+    //     //         }
+    //     //     }
+    //     //     }
 
-        //     for (const index in renderedIndexes) {
-        //     if (renderedIndexes.hasOwnProperty(index)) {
-        //         this._onPageRemoved(renderedIndexes[index]);
-        //     }
-        //     }
-        // }
-    }
+    //     //     for (const index in renderedIndexes) {
+    //     //     if (renderedIndexes.hasOwnProperty(index)) {
+    //     //         this._onPageRemoved(renderedIndexes[index]);
+    //     //     }
+    //     //     }
+    //     // }
+    // }
     
-    /** Called when a page has been added to the DOM. */
-    private _onPageAdded(page: IPage2<T>): void {        
-        if (this.onPageAdded) {
-            this.onPageAdded(page);
-        }
-    }
+    // /** Called when a page has been added to the DOM. */
+    // private _onPageAdded(page: IPage2<T>): void {        
+    //     if (this.onPageAdded) {
+    //         this.onPageAdded(page);
+    //     }
+    // }
 
-    /** Called when a page has been removed from the DOM. */
-    private _onPageRemoved(page: IPage2<T>): void {
-        if (this.onPageRemoved) {
-            this.onPageRemoved(page);
-        }
-    }
+    // /** Called when a page has been removed from the DOM. */
+    // private _onPageRemoved(page: IPage2<T>): void {
+    //     if (this.onPageRemoved) {
+    //         this.onPageRemoved(page);
+    //     }
+    // }
 
     private _shouldVirtualize(): boolean {
         return !this.onShouldVirtualize || this.onShouldVirtualize(this);
@@ -906,99 +938,99 @@ export class FluentList<T> extends FASTElement {
         return this.renderCount === undefined ? (this.items ? this.items.length - this.startIndex! : 0) : this.renderCount;
     }
 
-    private _getPageSpecification(
-            itemIndex: number,
-            visibleRect: IRectangle,
-        ): {
-            // These return values are now no longer optional.
-            itemCount: number;
-            height: number;
-            data?: any;
-            key?: string;
-        } {
+    // private _getPageSpecification(
+    //         itemIndex: number,
+    //         visibleRect: IRectangle,
+    //     ): {
+    //         // These return values are now no longer optional.
+    //         itemCount: number;
+    //         height: number;
+    //         data?: any;
+    //         key?: string;
+    //     } {
         
-        if (this.getPageSpecification !== undefined) {
-            console.log("got page spec");
-            const pageData = this.getPageSpecification(itemIndex, visibleRect);
+    //     if (this.getPageSpecification !== undefined) {
+    //         console.log("got page spec");
+    //         const pageData = this.getPageSpecification(itemIndex, visibleRect);
         
-            const { itemCount = this._getItemCountForPage(itemIndex, visibleRect) } = pageData;
+    //         const { itemCount = this._getItemCountForPage(itemIndex, visibleRect) } = pageData;
         
-            const { height = this._getPageHeight(itemIndex, visibleRect, itemCount) } = pageData;
+    //         const { height = this._getPageHeight(itemIndex, visibleRect, itemCount) } = pageData;
         
-            return {
-                itemCount: itemCount,
-                height: height,
-                data: pageData.data,
-                key: pageData.key,
-            };
-        } else {
-            const itemCount = this._getItemCountForPage(itemIndex, visibleRect);
-                //console.log("ItemCount " + itemCount);
-            return {
-                itemCount: itemCount,
-                height: this._getPageHeight(itemIndex, visibleRect, itemCount),
-            };
-        }
-    }
+    //         return {
+    //             itemCount: itemCount,
+    //             height: height,
+    //             data: pageData.data,
+    //             key: pageData.key,
+    //         };
+    //     } else {
+    //         const itemCount = this._getItemCountForPage(itemIndex, visibleRect);
+    //             //console.log("ItemCount " + itemCount);
+    //         return {
+    //             itemCount: itemCount,
+    //             height: this._getPageHeight(itemIndex, visibleRect, itemCount),
+    //         };
+    //     }
+    // }
 
       /**
    * Get the pixel height of a give page. Will use the props getPageHeight first, and if not provided, fallback to
    * cached height, or estimated page height, or default page height.
    */
-    private _getPageHeight(itemIndex: number, visibleRect: IRectangle, itemsPerPage: number): number {
-        // if (this.getPageHeight) {
-        //     return this.getPageHeight(itemIndex, visibleRect, itemsPerPage);
-        // } else {
-            const cachedHeight = this._cachedPageHeights[itemIndex];
+    // private _getPageHeight(itemIndex: number, visibleRect: IRectangle, itemsPerPage: number): number {
+    //     // if (this.getPageHeight) {
+    //     //     return this.getPageHeight(itemIndex, visibleRect, itemsPerPage);
+    //     // } else {
+    //         const cachedHeight = this._cachedPageHeights[itemIndex];
 
-            return cachedHeight ? cachedHeight.height : this._estimatedPageHeight || DEFAULT_PAGE_HEIGHT;
-        // }
-    }
+    //         return cachedHeight ? cachedHeight.height : this._estimatedPageHeight || DEFAULT_PAGE_HEIGHT;
+    //     // }
+    // }
 
-    private _getItemCountForPage(itemIndex: number, visibileRect: IRectangle): number {
+    // private _getItemCountForPage(itemIndex: number, visibileRect: IRectangle): number {
 
-        // const itemsPerPage = this.getItemCountForPage
-        //     ? this.getItemCountForPage(itemIndex, visibileRect)
-        //     : DEFAULT_ITEMS_PER_PAGE;
-        const itemsPerPage = undefined;
+    //     // const itemsPerPage = this.getItemCountForPage
+    //     //     ? this.getItemCountForPage(itemIndex, visibileRect)
+    //     //     : DEFAULT_ITEMS_PER_PAGE;
+    //     const itemsPerPage = undefined;
 
         
-        return itemsPerPage ? itemsPerPage : DEFAULT_ITEMS_PER_PAGE;
-    }
+    //     return itemsPerPage ? itemsPerPage : DEFAULT_ITEMS_PER_PAGE;
+    // }
 
 }
 
-function _expandRect(rect: IRectangle, pagesBefore: number, pagesAfter: number): IRectangle {
-    const top = rect.top - pagesBefore * rect.height;
-    const height = rect.height + (pagesBefore + pagesAfter) * rect.height;
+// function _expandRect(rect: IRectangle, pagesBefore: number, pagesAfter: number): IRectangle {
+//     const top = rect.top - pagesBefore * rect.height;
+//     const height = rect.height + (pagesBefore + pagesAfter) * rect.height;
   
-    return {
-      top: top,
-      bottom: top + height,
-      height: height,
-      left: rect.left,
-      right: rect.right,
-      width: rect.width,
-    };
-}
+//     return {
+//       top: top,
+//       bottom: top + height,
+//       height: height,
+//       left: rect.left,
+//       right: rect.right,
+//       width: rect.width,
+//     };
+// }
 
-function _isContainedWithin(innerRect: IRectangle, outerRect: IRectangle): boolean {
-    return (
-        innerRect.top >= outerRect.top &&
-        innerRect.left >= outerRect.left &&
-        innerRect.bottom! <= outerRect.bottom! &&
-        innerRect.right! <= outerRect.right!
-    );
-}
+// function _isContainedWithin(innerRect: IRectangle, outerRect: IRectangle): boolean {
+//     return (
+//         innerRect.top >= outerRect.top &&
+//         innerRect.left >= outerRect.left &&
+//         innerRect.bottom! <= outerRect.bottom! &&
+//         innerRect.right! <= outerRect.right!
+//     );
+// }
   
-function _mergeRect(targetRect: IRectangle, newRect: IRectangle): IRectangle {
-    targetRect.top = newRect.top < targetRect.top || targetRect.top === -1 ? newRect.top : targetRect.top;
-    targetRect.left = newRect.left < targetRect.left || targetRect.left === -1 ? newRect.left : targetRect.left;
-    targetRect.bottom =
-        newRect.bottom! > targetRect.bottom! || targetRect.bottom === -1 ? newRect.bottom : targetRect.bottom;
-    targetRect.right = newRect.right! > targetRect.right! || targetRect.right === -1 ? newRect.right : targetRect.right;
-    targetRect.width = targetRect.right! - targetRect.left + 1;
-    targetRect.height = targetRect.bottom! - targetRect.top + 1;
+// function _mergeRect(targetRect: IRectangle, newRect: IRectangle): IRectangle {
+//     targetRect.top = newRect.top < targetRect.top || targetRect.top === -1 ? newRect.top : targetRect.top;
+//     targetRect.left = newRect.left < targetRect.left || targetRect.left === -1 ? newRect.left : targetRect.left;
+//     targetRect.bottom =
+//         newRect.bottom! > targetRect.bottom! || targetRect.bottom === -1 ? newRect.bottom : targetRect.bottom;
+//     targetRect.right = newRect.right! > targetRect.right! || targetRect.right === -1 ? newRect.right : targetRect.right;
+//     targetRect.width = targetRect.right! - targetRect.left + 1;
+//     targetRect.height = targetRect.bottom! - targetRect.top + 1;
 
-    return targetRect;
-}
+//     return targetRect;
+// }

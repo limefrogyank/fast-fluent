@@ -1,0 +1,43 @@
+@using System.Collections.Generic
+@typeparam TItem
+
+<fast-fluent-list @ref=@fluentList />
+
+@code{
+    private ElementReference fluentList;
+    private bool jsAvailable;
+    private IReadOnlyCollection<TItem> items;
+
+    [Inject] private IJSRuntime JSRuntime {get;set;}
+    [Parameter] public IReadOnlyCollection<TItem> Items {get; set;} 
+//    [Parameter] public string Label {get; set;}
+//    [Parameter] public bool Required {get; set;}
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (items != Items)
+        {
+            items = Items;
+            if (jsAvailable)
+            {
+                await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, Items);
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsAvailable=true;
+            if (Items != null)
+            {
+                await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, Items);
+            }
+        }
+        
+
+    }
+    
+}

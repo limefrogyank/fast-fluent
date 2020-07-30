@@ -23,7 +23,7 @@ let loadList = (firstList:HTMLElement):void =>{
         </div>
     `;
     let items : any[] = [];
-    for (var i = 0; i< 50; i++){
+    for (var i = 0; i< 5000; i++){
         items.push({value: i.toString()});
         //items.push(i);
     }

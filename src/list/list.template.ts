@@ -1,4 +1,4 @@
-import { children, html, ref, repeat, slotted, SyntheticViewTemplate, ViewTemplate } from "@microsoft/fast-element";
+import { children, html, when, ref, repeat, slotted, SyntheticViewTemplate, ViewTemplate } from "@microsoft/fast-element";
 import { endTemplate, startTemplate } from "../patterns";
 import { FluentList } from "./list";
 import { IPage } from "@fluentui/react";
@@ -40,9 +40,27 @@ export const ListTemplate = html<FluentList<any>>`
     <template>
         <div ${ref('_root')} role="list" style="overflow-y:hidden;height:100%;width:100%;">
             <div ${ref('scrollElement')} ${children('_refs')} style="overflow-y:auto;height:100%;width:100%;">
-                <div ${ref('spacerBefore')} class="spacer" data-List-spacer="before" style="height:${x => x.virtualizedData.numItemsToSkipBefore * x.averageHeight}px;background-color:yellow;"></div> 
-                ${repeat((x) => x.virtualizedData.subSetOfItems, ItemTemplate)}
-                <div ${ref('spacerAfter')} class="spacer" data-List-spacer="after" style="height:${x => x.virtualizedData.numItemsToSkipAfter * x.averageHeight}px;background-color:yellow;"></div> 
+                <div ${ref('spacerBefore')} class="spacer" data-List-spacer="before" style="height:${x => x.virtualizedData.numItemsToSkipBefore * x.averageHeight}px;"></div> 
+                ${repeat((x) => x.virtualizedData.subSetOfItems, html<any>`
+                ${when((x,c)=> c.index !== undefined, html<any>`
+                <div role='listitem'
+                    class='ms-List-cell'  
+                    style="height:50px;" 
+                    key=${(x,c) => {
+                        let page = c.parent as IPage2<any>;
+                        let itemKey = page.getKey ? page.getKey(x, page.startIndex + c.index) : x && (x as any).key;
+                        if (itemKey === null || itemKey === undefined) {
+                            itemKey=page.startIndex + c.index;
+                        }
+                        return itemKey;            
+                    }}
+                    data-list-index=${(x,c) => (c.parent as IPage2<any>).startIndex + c.index}>
+                    ${(x,c)=>(c.parent as IPage2<any>).onRenderCell ? (c.parent as IPage2<any>).onRenderCell!(x,(c.parent as IPage2<any>).startIndex + c.index): ""}
+                </div>
+                ` )}
+                
+                `)}
+                <div ${ref('spacerAfter')} class="spacer" data-List-spacer="after" style="height:${x => x.virtualizedData.numItemsToSkipAfter * x.averageHeight}px;"></div> 
             </div>
         </div>
 

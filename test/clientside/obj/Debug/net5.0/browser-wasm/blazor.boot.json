@@ -193,13 +193,13 @@
       "mscorlib.dll": "sha256-pzeEoLNioXrr+sQaJ+n4KMRPYMhCCrtCpOeLccHj9aw=",
       "netstandard.dll": "sha256-jv9OIGU0I7FlDShvCJbhi7YOPw9VM4zTo+hd00qCYws=",
       "System.Private.CoreLib.dll": "sha256-quErEx1KCzELE95rEdDnbyG2PKvpuAJCVNyC4\/WD1z8=",
-      "BlazorFluentUi.dll": "sha256-ptnZMeag2e14HNa4SD\/stStQr1ZMjLV9vkIdZkXI06E=",
-      "BlazorFluentUi.ClientSide.dll": "sha256-zQtCuH8yiUfJxG6rMenNFT9YR0M8K60\/1o8\/TDLCuz0="
+      "BlazorFluentUi.dll": "sha256-5hTAqMcIy82OtGOKBn+tpdjjuvEcd+5I41Ac0sDhr3I=",
+      "BlazorFluentUi.ClientSide.dll": "sha256-L0naTzqPvihxe222pGIOtiM1EJ09vBs8W54vgZbbutk="
     },
     "dynamicAssembly": null,
     "pdb": {
-      "BlazorFluentUi.pdb": "sha256-5pxN70QG9wh2JGZ7VSmvPVpR4bQOexzs10KGCM8AOjc=",
-      "BlazorFluentUi.ClientSide.pdb": "sha256-t9zPjHkNos5n5LE5k1bLLqFq0WFQtWgf1OPPUWup8uQ="
+      "BlazorFluentUi.pdb": "sha256-tAXagDXRYgH4CAHO8SDX0ZGKeZY7tc2byTtHZLRZ1DY=",
+      "BlazorFluentUi.ClientSide.pdb": "sha256-iTmUodLc0y8u+Ljja3umKxBT9zYvw35+XePs+WecrMk="
     },
     "runtime": {
       "dotnet.wasm": "sha256-\/naE+7n4c+w8QbCIig7eL4YE+VuXbIXU7fnKW7wXU\/o=",

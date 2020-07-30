@@ -62,55 +62,6 @@
       },
       {
         "Kind": "Components.Component",
-        "Name": "BlazorFluentUi.ClientSide.Pages.Counter",
-        "AssemblyName": "BlazorFluentUi.ClientSide",
-        "Documentation": null,
-        "TagOutputHint": null,
-        "CaseSensitive": true,
-        "TagMatchingRules": [
-          {
-            "TagName": "Counter",
-            "ParentTag": null,
-            "TagStructure": 0,
-            "Attributes": [],
-            "Diagnostics": []
-          }
-        ],
-        "BoundAttributes": [],
-        "AllowedChildTags": [],
-        "Diagnostics": [],
-        "Metadata": {
-          "Runtime.Name": "Components.IComponent",
-          "Common.TypeName": "BlazorFluentUi.ClientSide.Pages.Counter"
-        }
-      },
-      {
-        "Kind": "Components.Component",
-        "Name": "BlazorFluentUi.ClientSide.Pages.Counter",
-        "AssemblyName": "BlazorFluentUi.ClientSide",
-        "Documentation": null,
-        "TagOutputHint": null,
-        "CaseSensitive": true,
-        "TagMatchingRules": [
-          {
-            "TagName": "BlazorFluentUi.ClientSide.Pages.Counter",
-            "ParentTag": null,
-            "TagStructure": 0,
-            "Attributes": [],
-            "Diagnostics": []
-          }
-        ],
-        "BoundAttributes": [],
-        "AllowedChildTags": [],
-        "Diagnostics": [],
-        "Metadata": {
-          "Runtime.Name": "Components.IComponent",
-          "Common.TypeName": "BlazorFluentUi.ClientSide.Pages.Counter",
-          "Components.NameMatch": "Components.FullyQualifiedNameMatch"
-        }
-      },
-      {
-        "Kind": "Components.Component",
         "Name": "BlazorFluentUi.ClientSide.Pages.FetchData",
         "AssemblyName": "BlazorFluentUi.ClientSide",
         "Documentation": null,
@@ -204,6 +155,55 @@
         "Metadata": {
           "Runtime.Name": "Components.IComponent",
           "Common.TypeName": "BlazorFluentUi.ClientSide.Pages.Index",
+          "Components.NameMatch": "Components.FullyQualifiedNameMatch"
+        }
+      },
+      {
+        "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.ClientSide.Pages.Counter",
+        "AssemblyName": "BlazorFluentUi.ClientSide",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "Counter",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.ClientSide.Pages.Counter"
+        }
+      },
+      {
+        "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.ClientSide.Pages.Counter",
+        "AssemblyName": "BlazorFluentUi.ClientSide",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "BlazorFluentUi.ClientSide.Pages.Counter",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.ClientSide.Pages.Counter",
           "Components.NameMatch": "Components.FullyQualifiedNameMatch"
         }
       },
@@ -3569,6 +3569,119 @@
         "Metadata": {
           "Runtime.Name": "Components.IComponent",
           "Common.TypeName": "BlazorFluentUi.BFUTextField",
+          "Components.NameMatch": "Components.FullyQualifiedNameMatch"
+        }
+      },
+      {
+        "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.BFUList<TItem>",
+        "AssemblyName": "BlazorFluentUi",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "BFUList",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [
+          {
+            "Kind": "Components.Component",
+            "Name": "TItem",
+            "TypeName": "System.Type",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": "Specifies the type of the type parameter TItem for the BlazorFluentUi.BFUList<TItem> component.",
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "TItem",
+              "Components.TypeParameter": "True"
+            },
+            "BoundAttributeParameters": []
+          },
+          {
+            "Kind": "Components.Component",
+            "Name": "Items",
+            "TypeName": "System.Collections.Generic.IReadOnlyCollection<TItem>",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": null,
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "Items",
+              "Components.GenericTyped": "True"
+            },
+            "BoundAttributeParameters": []
+          }
+        ],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.BFUList<TItem>",
+          "Components.GenericTyped": "True"
+        }
+      },
+      {
+        "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.BFUList<TItem>",
+        "AssemblyName": "BlazorFluentUi",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "BlazorFluentUi.BFUList",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [
+          {
+            "Kind": "Components.Component",
+            "Name": "TItem",
+            "TypeName": "System.Type",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": "Specifies the type of the type parameter TItem for the BlazorFluentUi.BFUList<TItem> component.",
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "TItem",
+              "Components.TypeParameter": "True"
+            },
+            "BoundAttributeParameters": []
+          },
+          {
+            "Kind": "Components.Component",
+            "Name": "Items",
+            "TypeName": "System.Collections.Generic.IReadOnlyCollection<TItem>",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": null,
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "Items",
+              "Components.GenericTyped": "True"
+            },
+            "BoundAttributeParameters": []
+          }
+        ],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.BFUList<TItem>",
+          "Components.GenericTyped": "True",
           "Components.NameMatch": "Components.FullyQualifiedNameMatch"
         }
       },

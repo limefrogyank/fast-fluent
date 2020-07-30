@@ -20,6 +20,13 @@ using Microsoft.AspNetCore.Components.Web;
 #line default
 #line hidden
 #nullable disable
+#nullable restore
+#line 2 "C:\Users\Lee\source\repos\fast-fluent\blazorlib\_Imports.razor"
+using Microsoft.JSInterop;
+
+#line default
+#line hidden
+#nullable disable
     public partial class BFUTextField : Microsoft.AspNetCore.Components.ComponentBase
     {
         #pragma warning disable 1998

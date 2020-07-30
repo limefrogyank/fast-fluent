@@ -609,3 +609,4 @@ C:\Users\Lee\source\repos\fast-fluent\test\clientside\obj\Debug\net5.0\browser-w
 C:\Users\Lee\source\repos\fast-fluent\test\clientside\obj\Debug\net5.0\browser-wasm\staticwebassets\BlazorFluentUi.ClientSide.StaticWebAssets.xml
 C:\Users\Lee\source\repos\fast-fluent\test\clientside\obj\Debug\net5.0\browser-wasm\BlazorFluentUi.ClientSide.dll
 C:\Users\Lee\source\repos\fast-fluent\test\clientside\obj\Debug\net5.0\browser-wasm\BlazorFluentUi.ClientSide.pdb
+C:\Users\Lee\source\repos\fast-fluent\test\clientside\bin\Debug\net5.0\browser-wasm\tsconfig.json

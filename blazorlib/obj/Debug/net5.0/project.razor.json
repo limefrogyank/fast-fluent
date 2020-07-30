@@ -144,6 +144,119 @@
       },
       {
         "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.BFUList<TItem>",
+        "AssemblyName": "BlazorFluentUi",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "BFUList",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [
+          {
+            "Kind": "Components.Component",
+            "Name": "TItem",
+            "TypeName": "System.Type",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": "Specifies the type of the type parameter TItem for the BlazorFluentUi.BFUList<TItem> component.",
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "TItem",
+              "Components.TypeParameter": "True"
+            },
+            "BoundAttributeParameters": []
+          },
+          {
+            "Kind": "Components.Component",
+            "Name": "Items",
+            "TypeName": "System.Collections.Generic.IReadOnlyCollection<TItem>",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": null,
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "Items",
+              "Components.GenericTyped": "True"
+            },
+            "BoundAttributeParameters": []
+          }
+        ],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.BFUList<TItem>",
+          "Components.GenericTyped": "True"
+        }
+      },
+      {
+        "Kind": "Components.Component",
+        "Name": "BlazorFluentUi.BFUList<TItem>",
+        "AssemblyName": "BlazorFluentUi",
+        "Documentation": null,
+        "TagOutputHint": null,
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "BlazorFluentUi.BFUList",
+            "ParentTag": null,
+            "TagStructure": 0,
+            "Attributes": [],
+            "Diagnostics": []
+          }
+        ],
+        "BoundAttributes": [
+          {
+            "Kind": "Components.Component",
+            "Name": "TItem",
+            "TypeName": "System.Type",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": "Specifies the type of the type parameter TItem for the BlazorFluentUi.BFUList<TItem> component.",
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "TItem",
+              "Components.TypeParameter": "True"
+            },
+            "BoundAttributeParameters": []
+          },
+          {
+            "Kind": "Components.Component",
+            "Name": "Items",
+            "TypeName": "System.Collections.Generic.IReadOnlyCollection<TItem>",
+            "IsEnum": false,
+            "IndexerNamePrefix": null,
+            "IndexerTypeName": null,
+            "Documentation": null,
+            "Diagnostics": [],
+            "Metadata": {
+              "Common.PropertyName": "Items",
+              "Components.GenericTyped": "True"
+            },
+            "BoundAttributeParameters": []
+          }
+        ],
+        "AllowedChildTags": [],
+        "Diagnostics": [],
+        "Metadata": {
+          "Runtime.Name": "Components.IComponent",
+          "Common.TypeName": "BlazorFluentUi.BFUList<TItem>",
+          "Components.GenericTyped": "True",
+          "Components.NameMatch": "Components.FullyQualifiedNameMatch"
+        }
+      },
+      {
+        "Kind": "Components.Component",
         "Name": "Microsoft.AspNetCore.Components.CascadingValue<TValue>",
         "AssemblyName": "Microsoft.AspNetCore.Components",
         "Documentation": "\n            <summary>\n            A component that provides a cascading value to all descendant components.\n            </summary>\n        ",
@@ -16196,6 +16309,11 @@
       "FilePath": "c:\\Users\\Lee\\source\\repos\\fast-fluent\\blazorlib\\_Imports.razor",
       "TargetPath": "_Imports.razor",
       "FileKind": "componentImport"
+    },
+    {
+      "FilePath": "c:\\Users\\Lee\\source\\repos\\fast-fluent\\blazorlib\\BFUList.razor",
+      "TargetPath": "BFUList.razor",
+      "FileKind": "component"
     },
     {
       "FilePath": "c:\\Users\\Lee\\source\\repos\\fast-fluent\\blazorlib\\BFUTextField.razor",

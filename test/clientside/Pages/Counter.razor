@@ -1,16 +1,27 @@
 @page "/counter"
 
-<h1>Counter</h1>
+<div style="height:100%;overflow-y:hidden;">
+<h1>List</h1>
 
-<p>Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<fast-design-system-provider use-defaults>
+    
+    <div style="height:500px;">
+        <BFUList Items=@testList  /> 
+    </div>
+</fast-design-system-provider> 
+</div>
 
 @code {
-    private int currentCount = 0;
+    private List<int> testList;
 
-    private void IncrementCount()
+    protected override Task OnInitializedAsync()
     {
-        currentCount++;
+        testList = new List<int>();  
+        for (var i=0; i< 5000; i++)
+        {
+            testList.Add(i);
+        }
+        return Task.CompletedTask; 
     }
+
 }
