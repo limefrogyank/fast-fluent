@@ -1,4 +1,0 @@
-﻿<StaticWebAssets Version="1.0">
-  <ContentRoot BasePath="_content/BlazorFluentUi" Path="C:\Users\Lee\source\repos\fast-fluent\blazorlib\wwwroot\" />
-  <ContentRoot BasePath="/" Path="C:\Users\Lee\source\repos\fast-fluent\test\clientside\bin\Debug\net5.0\browser-wasm\wwwroot\" />
-</StaticWebAssets>
