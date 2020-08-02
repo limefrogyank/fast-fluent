@@ -1,6 +1,7 @@
-import { attr, customElement, DOM, FASTElement } from "@microsoft/fast-element";
+import { attr, customElement, DOM, FASTElement, observable } from "@microsoft/fast-element";
 import { DetailsListTemplate as template} from "./details-list.template";
 import { DetailsListStyles as styles } from "./details-list.styles";
+import { FluentList} from "../list";
 
 
 @customElement({
@@ -11,15 +12,10 @@ import { DetailsListStyles as styles } from "./details-list.styles";
         delegatesFocus: true,
     },
 })
-export class FluentDetailsList extends FASTElement {
+export class FluentDetailsList<T> extends FASTElement {
 
-/**
-     * The element is required.
-     *
-     * @public
-     * @remarks
-     * HTML Attribute: required
-     */
+    public internalList :FluentList<T>;
+
     @attr({mode: "boolean"})
     public required: boolean;
 
@@ -28,13 +24,7 @@ export class FluentDetailsList extends FASTElement {
         DOM.queueUpdate(() => this.classList.toggle("required", this.required));
     }
 
-    /**
-     * The element is disabled.
-     *
-     * @public
-     * @remarks
-     * HTML Attribute: disabled
-     */
+
     @attr({mode: "boolean"})
     public disabled: boolean;
 
@@ -43,19 +33,30 @@ export class FluentDetailsList extends FASTElement {
         DOM.queueUpdate(() => this.classList.toggle("disabled", this.disabled));
     }
 
-     /**
-     * The label is for element with id.
-     *
-     * @public
-     * @remarks
-     * HTML Attribute: for
-     */
+    @observable 
+    public items:T[];
+    private itemsChanged(oldValue: T[], newValue: T[]) {
+         if (oldValue !== newValue){
+             this.internalList.items = newValue;
+         }
+    }
+
+    private propertyChanged(needsReset: boolean):void {
+        if (needsReset){
+            //this.initialListDrawing();
+
+        }
+    }
+
+
     @attr
     public for: string;
 
-    /**
-     * @internal
-     */
+    @attr
+    public disableSelectionZone:boolean;
+
+    public isHeaderVisible :boolean;
+
     public connectedCallback() {
         super.connectedCallback();
 

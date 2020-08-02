@@ -4,65 +4,6 @@ import { ListStyles as styles } from "./list.styles";
 import { IVirtualizedData } from "./interface";
 //import { Async, EventGroup, IRectangle, IPage, IPageSpecification, getParent, getWindow, findIndex } from "@fluentui/react";
 
-
-// const EMPTY_RECT = {
-//     top: -1,
-//     bottom: -1,
-//     left: -1,
-//     right: -1,
-//     width: 0,
-//     height: 0,
-// };
-
-
-// interface IPage2<T> extends IPage<T>{
-//     getKey?: (item: T, index?: number) => string;
-//     onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
-// }
-
-// Naming expensive measures so that they're named in profiles.
-// const _measurePageRect = (element: HTMLElement) => element.getBoundingClientRect();
-// const _measureSurfaceRect = _measurePageRect;
-// const _measureScrollRect = _measurePageRect;
-
-// interface IPageCacheItem<T> {
-//     page: IPage2<T>;
-//     pageElement?: JSX.Element;
-// }
-
-// interface IPageCache<T> {
-//     [key: string]: IPageCacheItem<T>;
-// }
-  
-// interface IListState<T = any> {
-//     pages: IPage2<T>[];
-  
-//     /** The last versionstamp for  */
-//     measureVersion?: number;
-//     isScrolling?: boolean;
-// }
-
-// const RESIZE_DELAY = 16;
-// const MIN_SCROLL_UPDATE_DELAY = 100;
-// const MAX_SCROLL_UPDATE_DELAY = 500;
-// const IDLE_DEBOUNCE_DELAY = 200;
-// // The amount of time to wait before declaring that the list isn't scrolling
-// const DONE_SCROLLING_WAIT = 500;
-// const DEFAULT_ITEMS_PER_PAGE = 10;
-// const DEFAULT_PAGE_HEIGHT = 30;
-// const DEFAULT_RENDERED_WINDOWS_BEHIND = 2;
-// const DEFAULT_RENDERED_WINDOWS_AHEAD = 2;
-// const PAGE_KEY_PREFIX = 'page-';
-// const SPACER_KEY_PREFIX = 'spacer-';
-
-// interface IVirtualizedData<T> {
-//     subSetOfItems: T[];
-//     numItemsToSkipBefore: number;
-//     numItemsToSkipAfter: number;    
-//     numItemsToShow: number;
-// }
-
-
 @customElement({
     name: "fast-fluent-list",
     template,
@@ -128,7 +69,7 @@ export class FluentList<T> extends FASTElement {
     // public onPagesUpdated?: (pages: IPage2<T>[]) => void;
 
     @observable
-    public onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
+    public onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => string;
 
     // @observable
     // public pages?: IPage2<T>[];
@@ -211,6 +152,9 @@ export class FluentList<T> extends FASTElement {
     _surface: HTMLDivElement;
     _root: HTMLDivElement;
 
+    slottedNodes: Node[];
+    //_template: HTMLTemplateElement;
+
     @observable
     private _measureVersion: number;
     private _scrollHeight: number;
@@ -265,7 +209,7 @@ export class FluentList<T> extends FASTElement {
         this._focusedIndex = -1;
         //this._pageCache = {};
         //this.getPageSpecification=undefined;
-        this.onRenderCell = (a,b,c) => html<T>`${x=>x}`;
+        //this.onRenderCell = (a,b,c) => html<T>`${x=>x}`;
     }
 
     public connectedCallback() {
@@ -382,23 +326,27 @@ export class FluentList<T> extends FASTElement {
   
     }
 
-    private changeSubset(totalToTake:number, numberToSkipFirst:number, subset:T[]){
+    private changeSubset(totalToTake:number, numberToSkipFirst:number, subset:{index:number, item:T}[]){
         
         if (this.items === undefined){
             return;
         }
         if (subset.length == 0 && this.items !== undefined) {
-            var itemsToAdd = this.items.slice(numberToSkipFirst, numberToSkipFirst + totalToTake)
-            subset.push(...itemsToAdd);
+            var itemsToAdd = this.items.slice(numberToSkipFirst, numberToSkipFirst + totalToTake);
+            let transformed = itemsToAdd.map((v,i) => {
+                return {index:i+numberToSkipFirst, item:v}
+            });
+            subset.push(...transformed);
         }
         // before
-        let currentStartIndex = this.items.indexOf(subset[0]);
+        let currentStartIndex = subset[0].index;
+        //let currentStartIndex = this.items.indexOf(subset[0]);
         if (numberToSkipFirst > currentStartIndex){
             //need to remove items from subset start
             subset.splice(0,numberToSkipFirst - currentStartIndex);
         } else if (numberToSkipFirst < currentStartIndex) {
             //need to add more items to subset start
-            subset.splice(0,0, ...this.items.slice(numberToSkipFirst, currentStartIndex ));
+            subset.splice(0,0, ...this.items.slice(numberToSkipFirst, currentStartIndex).map((v,i)=>{ return {item:v, index:i+numberToSkipFirst} }));
         }
         // after
         if (subset.length > totalToTake){
@@ -406,7 +354,8 @@ export class FluentList<T> extends FASTElement {
             subset.splice(totalToTake, subset.length - totalToTake);
         } else if (subset.length < totalToTake){
             //not enough, need more from the original array
-            subset.push(...this.items.slice(numberToSkipFirst + subset.length, numberToSkipFirst + totalToTake));
+            let startIndex = numberToSkipFirst + subset.length;
+            subset.push(...this.items.slice(startIndex, numberToSkipFirst + totalToTake).map((v,i)=>{ return {item:v, index:i+startIndex} }));
         }
 
 
@@ -414,11 +363,11 @@ export class FluentList<T> extends FASTElement {
 
     private initialListDrawing(){
 
-        let subSetOfItems: T[];
+        let subSetOfItems: {index:number,item:T}[];
         let numItemsToShow = 0;
         let numItemsToSkipAfter = 0;
         if (this.items != undefined) {
-            subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20));
+            subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20)).map((v,i)=>{ return {item:v, index:i} });
             numItemsToShow = Math.min(this.items.length, 20);
             numItemsToSkipAfter = Math.max(0, this.items.length - 20);
         } else{

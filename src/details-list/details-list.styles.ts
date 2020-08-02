@@ -24,6 +24,9 @@ export const DetailsListStyles = css`
         font-family: var(--body-font);
         font-weight: var(--font-weight-semiBold);
         outline: none;
+        height:100%;
+        width:100%;
+        overflow-y:hidden;
         user-select: none;
     }
     :host(.disabled) label {

@@ -1,0 +1,54 @@
+
+@typeparam TItem
+
+
+
+<div style="width:100%;height:500px;">
+    <fast-fluent-details-list @ref=@detailsList>
+        <fast-fluent-list id="firstList" slot="list">
+            <div id="itemTemplate" >
+                <div style="background-color:yellow">
+                    ${item.value} and something else!
+                </div>                
+            </div>
+        </fast-fluent-list>
+    </fast-fluent-details-list> 
+</div>
+
+@code{
+    string s;
+
+    ElementReference detailsList;
+    bool jsAvailable;
+
+    [Inject] public IJSRuntime JSRuntime { get; set; }
+    [Parameter] public ICollection<TItem> ItemsSource {get;set;} 
+    [Parameter] public RenderFragment<IndexedItem<TItem>> ItemTemplate {get;set;}
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (jsAvailable)
+        {
+            if (parameters.TryGetValue<IReadOnlyCollection<TItem>>("ItemsSource", out var itemsSource))
+            {
+                if (itemsSource != ItemsSource)
+                    await JSRuntime.InvokeVoidAsync("BlazorFluentUiDetailsList.setList", detailsList, itemsSource);
+            }
+        }
+
+        await base.SetParametersAsync(parameters);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsAvailable=true;
+            if (ItemsSource != null)
+            {
+                await JSRuntime.InvokeVoidAsync("BlazorFluentUiDetailsList.setList", detailsList, ItemsSource);
+            }
+        }
+    }
+    
+}

@@ -12,6 +12,7 @@
         "target": "es2015",
         "allowJs": true,
         "importHelpers": true,
+        "downlevelIteration": true,
         "types": [
             
             "webpack-env"

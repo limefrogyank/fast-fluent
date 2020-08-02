@@ -1,43 +1,232 @@
-@using System.Collections.Generic
+@implements IDisposable
 @typeparam TItem
 
-<fast-fluent-list @ref=@fluentList />
+<div class=@($"ms-List mediumFont {this.ClassName}") role="list" @ref="listReference"
+        style=@($"{this.Style}overflow-y:hidden;height:100%;")>
+    <div @ref="surfaceDiv" class="ms-List-surface" role="presentation" style="overflow-y:auto;height:100%;">
+
+        @if (IsVirtualizing)
+        {
+            <div @key=@("spacerBefore")
+                 @ref=@spacerBefore
+                 class="spacer"
+                 style="height: @(_numItemsToSkipBefore * _averageHeight)px;"></div>
+
+            var index = 0;
+            foreach (var item in _itemsSource.Skip(_numItemsToSkipBefore).Take(_numItemsToShow))
+            {
+                <div data-item-key=@(GetKey != null ? GetKey(item) : (_numItemsToSkipBefore + index).ToString()) 
+                    @key=@(GetKey != null ? GetKey(item) : (_numItemsToSkipBefore + index).ToString()) 
+                    class="ms-List-cell">
+                    @{
+                        ItemTemplate(new IndexedItem<TItem>{Item = item, Index= _numItemsToSkipBefore + index})(__builder);  
+                        index++;
+                    }
+                </div>
+            }
+            <div @key=@("spacerAfter") @ref=@spacerAfter class="spacer" style="height: @(_itemsToSkipAfter * _averageHeight)px;"></div>
+        }
+        else  
+        {
+            var index = 0;
+            foreach (var item in _itemsSource)
+            { 
+                <div data-item-key=@(GetKey != null ? GetKey(item) : (_numItemsToSkipBefore + index).ToString()) 
+                    @key=@(GetKey != null ? GetKey(item) : (_numItemsToSkipBefore + index).ToString()) 
+                    class="ms-List-cell">
+                    @{
+                        ItemTemplate(new IndexedItem<TItem>{Item = item, Index= _numItemsToSkipBefore + index})(__builder);
+                        index++;
+                    }
+                </div>
+            }
+        }
+    </div>
+</div >
 
 @code{
-    private ElementReference fluentList;
-    private bool jsAvailable;
-    private IReadOnlyCollection<TItem> items;
+    private double _averageHeight = 43;
+    private bool _hasMeasuredAverageHeightOnce = false;
+    private IEnumerable<TItem> _itemsSource;
+    private bool _jsAvailable = false;
+    private bool _lastIsVirtualizing = true;  
+    private int _listId;
+    private int _numItemsToSkipBefore;
+    private int _numItemsToShow;
+    private int _itemsToSkipAfter => _itemsSource.Count() - _numItemsToSkipBefore - _numItemsToShow;
+    private Viewport _viewport = new Viewport();
 
-    [Inject] private IJSRuntime JSRuntime {get;set;}
-    [Parameter] public IReadOnlyCollection<TItem> Items {get; set;} 
-//    [Parameter] public string Label {get; set;}
-//    [Parameter] public bool Required {get; set;}
+    private ElementReference listReference;
+    private ElementReference surfaceDiv;
+    private ElementReference spacerBefore;
+    private ElementReference spacerAfter;  
+    
+    [Inject] private IJSRuntime JSRuntime { get; set; }
+    [Parameter] public string ClassName { get; set; }
+    [Parameter] public Func<TItem,string> GetKey { get; set; }
+    [Parameter] public bool IsVirtualizing { get; set; } = true;
+    [Parameter] public IEnumerable<TItem> ItemsSource { get; set; }
+    [Parameter] public RenderFragment<IndexedItem<TItem>> ItemTemplate { get; set; }
+    [Parameter] public EventCallback<Viewport> OnViewportChanged { get; set; }
+    [Parameter] public string Style { get; set; }
 
 
     protected override async Task OnParametersSetAsync()
     {
-        if (items != Items)
+        if (_itemsSource != ItemsSource)
         {
-            items = Items;
-            if (jsAvailable)
+            if (this._itemsSource is System.Collections.Specialized.INotifyCollectionChanged)
             {
-                await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, Items);
+                (this._itemsSource as System.Collections.Specialized.INotifyCollectionChanged).CollectionChanged -= ListBase_CollectionChanged;
             }
-        }
+
+            _itemsSource = ItemsSource;
+            
+
+            if (this.ItemsSource is System.Collections.Specialized.INotifyCollectionChanged)
+            {
+                (this.ItemsSource as System.Collections.Specialized.INotifyCollectionChanged).CollectionChanged += ListBase_CollectionChanged;
+            }
+            
+            //_shouldRender = true;
+            //_needsRemeasure = true;
+        }            
+
+        await base.OnParametersSetAsync(); 
+    }
+
+    private void ListBase_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        //_shouldRender = true;
+        InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
+    {            
         if (firstRender)
         {
-            jsAvailable=true;
-            if (Items != null)
+            _lastIsVirtualizing = IsVirtualizing;
+            _jsAvailable = true;
+            if (IsVirtualizing)
             {
-                await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, Items);
+                var objectRef = DotNetObjectReference.Create(this);
+                var initResult = await JSRuntime.InvokeAsync<DOMRect>("BlazorFluentUiList.initialize", objectRef, surfaceDiv, spacerBefore, spacerAfter);
+                this._listId = (int)initResult.Left;
+                await UpdateViewportAsync(initResult.Right, initResult.Width, initResult.Bottom, initResult.Height);
             }
+            else
+            {
+                var viewportMeasurement = await JSRuntime.InvokeAsync<DOMRect>("BlazorFluentUiList.getViewport", surfaceDiv);
+                await UpdateViewportAsync(viewportMeasurement.Right, viewportMeasurement.Width, viewportMeasurement.Bottom, viewportMeasurement.Height);
+            }
+        }
+        else
+        {
+            if (_lastIsVirtualizing != IsVirtualizing) 
+            {
+                _lastIsVirtualizing = IsVirtualizing;  //need to make sure this area is run once, otherwise mulitple observers will be set for this viewport leading to blinking
+                if (IsVirtualizing)
+                {
+                    var objectRef = DotNetObjectReference.Create(this);
+                    var initResult = await JSRuntime.InvokeAsync<DOMRect>("BlazorFluentUiList.initialize", objectRef, surfaceDiv, spacerBefore, spacerAfter, true);
+                    this._listId = (int)initResult.Left;
+                    await UpdateViewportAsync(initResult.Right, initResult.Width, initResult.Bottom, initResult.Height);
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.removeList", this._listId);
+                }
+            }                
         }
         
 
+        if (IsVirtualizing && !firstRender && !_hasMeasuredAverageHeightOnce)
+        {
+
+            var averageHeight = await JSRuntime.InvokeAsync<double>("BlazorFluentUiList.getInitialAverageHeight", this._listId);
+            if (averageHeight != 0 && averageHeight != this._averageHeight)
+            {
+                this._hasMeasuredAverageHeightOnce = true;
+                this._averageHeight = averageHeight;
+                StateHasChanged();
+            }
+
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
-    
+
+    [JSInvokable]
+    public async void OnSpacerVisible(string spacerType, DOMRect visibleRect, double containerHeight, double spacerBeforeHeight, double spacerAfterHeight)
+    {
+        // Reset to match values corresponding to this event
+        _numItemsToSkipBefore = (int)Math.Round(spacerBeforeHeight / _averageHeight) - 1;
+        _numItemsToShow = _itemsSource.Count() - _numItemsToSkipBefore - (int)Math.Round(spacerAfterHeight / _averageHeight) + 4;
+
+        if (spacerType == "before" && _numItemsToSkipBefore > 0)
+        {
+            var visibleTop = visibleRect.Top;
+            var firstVisibleItemIndex = (int)Math.Floor(visibleTop / _averageHeight);
+            _numItemsToShow = (int)Math.Ceiling(containerHeight / _averageHeight) + 4;
+            _numItemsToSkipBefore = Math.Max(0, firstVisibleItemIndex - 2);
+            StateHasChanged();
+        }
+        else if (spacerType == "after" && _itemsToSkipAfter > 0)
+        {
+            var visibleBottom = visibleRect.Top + visibleRect.Height;
+            var lastVisibleItemIndex = _numItemsToSkipBefore + _numItemsToShow + (int)Math.Ceiling(visibleBottom / _averageHeight);
+            _numItemsToShow = (int)Math.Ceiling(containerHeight / _averageHeight) + 4;
+            _numItemsToSkipBefore = Math.Max(0, lastVisibleItemIndex - _numItemsToShow - 2);
+            StateHasChanged();
+        }
+
+        await UpdateViewportAsync(visibleRect.Right, visibleRect.Width, visibleRect.Bottom, visibleRect.Height);
+    }
+
+    private async Task UpdateViewportAsync(double scrollWidth, double width, double scrollHeight, double height)
+    {
+        bool hasChanged = false;
+        if (_viewport.ScrollWidth != scrollWidth)
+        {
+            hasChanged = true;
+            _viewport.ScrollWidth = scrollWidth;
+        }
+        if (_viewport.Width != width)
+        {
+            hasChanged = true;
+            _viewport.Width = width;
+        }
+        if (_viewport.ScrollHeight != scrollHeight)
+        {
+            hasChanged = true;
+            _viewport.ScrollHeight = scrollHeight;
+        }
+        if (_viewport.Height != height)
+        {
+            hasChanged = true;
+            _viewport.Height = height;
+        }
+
+        if (hasChanged)
+            await OnViewportChanged.InvokeAsync(_viewport);
+
+    }
+
+    public async void Dispose()
+    {
+
+        if (_itemsSource is System.Collections.Specialized.INotifyCollectionChanged)
+        {
+            (_itemsSource as System.Collections.Specialized.INotifyCollectionChanged).CollectionChanged -= ListBase_CollectionChanged;
+        }
+        if (_listId != null)
+        {
+            await JSRuntime.InvokeVoidAsync("BlazorFluentUiBaseComponent.removeList", _listId);
+        }
+        //if (_resizeRegistration != null)
+        //{
+        //    await JSRuntime.InvokeVoidAsync("BlazorFluentUiBaseComponent.deregisterResizeEvent", _resizeRegistration);
+        //}
+
+    }
 }

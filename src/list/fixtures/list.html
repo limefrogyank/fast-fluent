@@ -3,7 +3,14 @@
 
     <h4>Default</h4>
     <div style="width:100%;height:500px;">
-        <fast-fluent-list id="firstList" ></fast-fluent-list>
+        <fast-fluent-list id="firstList" >
+            <div id="itemTemplate" >
+                <div style="background-color:yellow">
+                    ${item.value} and something else!
+                </div>                
+            </div>
+        </fast-fluent-list>
+        
     </div>
     
 </fluent-design-system-provider>

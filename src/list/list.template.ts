@@ -1,69 +1,103 @@
 import { children, html, when, ref, repeat, slotted, SyntheticViewTemplate, ViewTemplate } from "@microsoft/fast-element";
-import { endTemplate, startTemplate } from "../patterns";
 import { FluentList } from "./list";
-import { IPage } from "@fluentui/react";
 
-interface IPage2<T> extends IPage<T>{
-    getKey?: (item: T, index?: number) => string;
-    onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
-}
+var generateTemplateString = (function(){
+    var cache = {};
 
-const ItemTemplate = html<any>`
-    <div role='listitem'
-        class='ms-List-cell'  
-        style="height:50px;" 
-        key=${(x,c) => {
-            let page = c.parent as IPage2<any>;
-            let itemKey = page.getKey ? page.getKey(x, page.startIndex + c.index) : x && (x as any).key;
-            if (itemKey === null || itemKey === undefined) {
-                itemKey=page.startIndex + c.index;
-            }
-            return itemKey;            
-        }}
-        data-list-index=${(x,c) => (c.parent as IPage2<any>).startIndex + c.index}>
-        ${(x,c)=>(c.parent as IPage2<any>).onRenderCell ? (c.parent as IPage2<any>).onRenderCell!(x,(c.parent as IPage2<any>).startIndex + c.index): ""}
-    </div>
-`;
+    function generateTemplate(template){
+        var fn = cache[template];
 
-// const PageTemplate = html<IPage2<any>>`
-//     <div data-page-key=${x => x.key} 
-//          class="ms-List-page"
-//          key="1"
-//          role="presentation"
-//          style="height:${x=> x.isSpacer ? x.height + "px" : "auto"};">
-//         ${repeat((x,c)=> x.items as any[], ItemTemplate, {positioning: true})}
-//     </div>
-// `;
+        if (!fn){
+            // Replace ${expressions} (etc) with ${map.expressions}.
 
+            var sanitized = template
+                .replace(/\$\{([\s]*[^;\s\{]+[\s]*)\}/g, function(_, match){
+                    return `\$\{map.${match.trim()}\}`;
+                    })
+                // Afterwards, replace anything that's not ${map.expressions}' (etc) with a blank string.
+                .replace(/(\$\{(?!map\.)[^}]+\})/g, '');
+
+            fn = Function('map', `return \`${sanitized}\``);
+        }
+
+        return fn;
+    }
+
+    return generateTemplate;
+})();
 
 export const ListTemplate = html<FluentList<any>>`
     <template>
+
         <div ${ref('_root')} role="list" style="overflow-y:hidden;height:100%;width:100%;">
             <div ${ref('scrollElement')} ${children('_refs')} style="overflow-y:auto;height:100%;width:100%;">
                 <div ${ref('spacerBefore')} class="spacer" data-List-spacer="before" style="height:${x => x.virtualizedData.numItemsToSkipBefore * x.averageHeight}px;"></div> 
                 ${repeat((x) => x.virtualizedData.subSetOfItems, html<any>`
-                ${when((x,c)=> c.index !== undefined, html<any>`
                 <div role='listitem'
                     class='ms-List-cell'  
                     style="height:50px;" 
-                    key=${(x,c) => {
-                        let page = c.parent as IPage2<any>;
-                        let itemKey = page.getKey ? page.getKey(x, page.startIndex + c.index) : x && (x as any).key;
+                    data-list-key="${(x,c) => {
+                        let fluentList = c.parent as FluentList<any>;
+                        let itemKey = fluentList.getKey ? fluentList.getKey(x.item, x.index) : x && (x as any).key;
                         if (itemKey === null || itemKey === undefined) {
-                            itemKey=page.startIndex + c.index;
+                            itemKey= x.index;
                         }
                         return itemKey;            
+                    }}"
+                    data-list-index="${(x,c) => x.index}">
+
+                    ${(x,c)=> {
+                        try{
+                        let fluentList = c.parent as FluentList<any>;
+                        let template : HTMLDivElement;
+                        for (let i=0; i< fluentList.children.length; i++){
+                            template = fluentList.children.item(i) as HTMLDivElement;
+                            if (template !== undefined){
+                                
+                                break;
+                            }
+                        }
+                        //fluentList.children.item(0) as HTMLTemplateElement; 
+                            
+                        if (template! !== undefined) {
+                            //let template = fluentList.slottedNodes.find(x=>x.nodeName.toLowerCase() === "template") as HTMLTemplateElement; //.filter(v => v.nodeType === 1)[0] as HTMLTemplateElement;
+                            try{
+                                console.log(x);
+                                var replaced = generateTemplateString(template.innerHTML)(x);
+                                console.log(replaced);
+                                //if (template !== undefined){
+                                return html<any>`${replaced}`;
+                            } catch (ex){
+                                console.log(ex);
+                                html<any>`${JSON.stringify(ex)}`;
+                            }
+                            //}
+                            //return "template undefined";
+                        }
+                        return "template undefined";
+                    } catch (ex){
+                        return "BIG ERROR";
+                    }
                     }}
-                    data-list-index=${(x,c) => (c.parent as IPage2<any>).startIndex + c.index}>
-                    ${(x,c)=>(c.parent as IPage2<any>).onRenderCell ? (c.parent as IPage2<any>).onRenderCell!(x,(c.parent as IPage2<any>).startIndex + c.index): ""}
-                </div>
-                ` )}
+                   
+<!--                     
+                    <fast-fluent-list-item index="${x=>x.index}">
+                        ${x => x.item.value}
+                        <slot name="itemTemplate">
                 
-                `)}
+                        </slot>
+                    </fast-fluent-list-item> -->
+    
+                </div>
+                `, {positioning:false})}
                 <div ${ref('spacerAfter')} class="spacer" data-List-spacer="after" style="height:${x => x.virtualizedData.numItemsToSkipAfter * x.averageHeight}px;"></div> 
             </div>
-        </div>
 
+            
+            
+        </div>
+        <slot ${slotted('slottedNodes')}></slot>
+        
     </template>
 `;
 

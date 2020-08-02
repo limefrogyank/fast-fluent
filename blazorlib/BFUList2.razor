@@ -1,0 +1,132 @@
+@using System.Collections.Generic
+@using System.Dynamic
+@using System.Linq
+@using System.Reflection
+
+@typeparam TItem
+
+
+<fast-fluent-list @ref=@fluentList >
+    <div id="itemTemplate">
+        <div>
+            @ItemTemplate(templateMapper)   
+        </div>
+    </div>
+</fast-fluent-list>
+
+
+
+@code{
+    private ElementReference fluentList;
+    private bool jsAvailable;
+    //private IReadOnlyCollection<TItem> items; 
+    private dynamic templateMapper;
+
+
+    [Inject] private IJSRuntime JSRuntime {get; set;}
+    [Parameter] public IReadOnlyCollection<TItem> Items {get; set;} 
+    //[Parameter] public string ItemTemplate {get; set;}     
+    [Parameter] public RenderFragment<dynamic> ItemTemplate {get; set;} 
+
+//    [Parameter] public string Label {get; set;}
+//    [Parameter] public bool Required {get; set;}
+
+    public BFUList2()
+    {
+        @* var props = typeof(TItem).GetProperties();
+        var fields = typeof(TItem).GetFields().Where(x=>x.IsPublic);
+        var itemMapper = new System.Dynamic.ExpandoObject();
+        foreach (var prop in props)
+        {
+             ((IDictionary<String, Object>)templateMapper).Add(prop.Name, $"${{item.{prop.Name}}}");
+        }
+        foreach (var field in fields)
+        {
+            ((IDictionary<String, Object>)templateMapper).Add(field.Name, $"${{item.{field.Name}}}");
+        } *@
+
+        this.templateMapper = CreatePropsAndFields(typeof(IndexedItem<TItem>));       
+    }
+
+    public dynamic CreatePropsAndFields(Type reference, string parentDirs="") 
+    {        
+        var props = reference.GetProperties();
+        var fields = reference.GetFields().Where(x=>x.IsPublic);
+        var itemMapper = new System.Dynamic.ExpandoObject();
+        foreach (var prop in props)
+        {
+            System.Diagnostics.Debug.WriteLine($"propname: {prop.Name}");
+            if (prop.PropertyType.IsClass && prop.PropertyType != typeof(string))
+            {
+                var dynamicItem = CreatePropsAndFields(prop.PropertyType, parentDirs + prop.Name.ToLower() + ".");
+                ((IDictionary<String, Object>)itemMapper).Add(prop.Name.ToLower(), dynamicItem);
+            }
+            else
+                ((IDictionary<String, Object>)itemMapper).Add(prop.Name.ToLower(), $"${{{parentDirs + prop.Name.ToLower()}}}"); 
+        }
+        foreach (var field in fields)
+        {
+            System.Diagnostics.Debug.WriteLine($"fieldname: {field.Name}"); 
+             if (field.FieldType.IsClass && field.FieldType != typeof(string))
+            {
+                var dynamicItem = CreatePropsAndFields(field.FieldType, parentDirs + field.Name.ToLower() + ".");
+                ((IDictionary<String, Object>)itemMapper).Add(field.Name.ToLower(), dynamicItem);
+            }
+            else
+                ((IDictionary<String, Object>)itemMapper).Add(field.Name.ToLower(), $"${{{parentDirs + field.Name.ToLower()}}}");
+        }
+        return itemMapper;
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        
+
+        if (jsAvailable)
+        {
+            if (parameters.TryGetValue<IReadOnlyCollection<TItem>>("Items", out var items))
+            {
+                if (items != Items)
+                    await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, items);
+            }
+            if (parameters.TryGetValue<RenderFragment<dynamic>>("ItemTemplate", out var itemTemplate))
+            {
+                if (itemTemplate != ItemTemplate) 
+                {
+                    //await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setItemTemplate", fluentList, itemTemplate);
+                }
+            }              
+        }
+
+        await base.SetParametersAsync(parameters);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        @* if (items != Items)
+        {
+            items = Items;
+            
+        } *@
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsAvailable=true;
+            if (Items != null)
+            {
+                await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setList", fluentList, Items);
+            }
+            if (ItemTemplate != null)
+            {
+                //await JSRuntime.InvokeVoidAsync("BlazorFluentUiList.setItemTemplate", fluentList, ItemTemplate);
+            }
+        }
+        
+
+    }
+    
+}

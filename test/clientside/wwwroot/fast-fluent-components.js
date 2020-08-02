@@ -10698,76 +10698,76 @@ FluentLabel = __decorate([customElement({
   }
 })], FluentLabel);
 
-const ItemTemplate = html`<div role='listitem' class='ms-List-cell' style="height:50px;" key=${(x, c) => {
-  let page = c.parent;
-  let itemKey = page.getKey ? page.getKey(x, page.startIndex + c.index) : x && x.key;
+var generateTemplateString = function () {
+  var cache = {};
+
+  function generateTemplate(template) {
+    var fn = cache[template];
+
+    if (!fn) {
+      // Replace ${expressions} (etc) with ${map.expressions}.
+      var sanitized = template.replace(/\$\{([\s]*[^;\s\{]+[\s]*)\}/g, function (_, match) {
+        return `\$\{map.${match.trim()}\}`;
+      }) // Afterwards, replace anything that's not ${map.expressions}' (etc) with a blank string.
+      .replace(/(\$\{(?!map\.)[^}]+\})/g, '');
+      fn = Function('map', `return \`${sanitized}\``);
+    }
+
+    return fn;
+  }
+
+  return generateTemplate;
+}();
+
+const ListTemplate = html`<template><div ${ref('_root')}role="list" style="overflow-y:hidden;height:100%;width:100%;"><div ${ref('scrollElement')} ${children('_refs')}style="overflow-y:auto;height:100%;width:100%;"><div ${ref('spacerBefore')}class="spacer" data-List-spacer="before" style="height:${x => x.virtualizedData.numItemsToSkipBefore * x.averageHeight}px;"></div>${repeat(x => x.virtualizedData.subSetOfItems, html`<div role='listitem' class='ms-List-cell' style="height:50px;" data-list-key="${(x, c) => {
+  let fluentList = c.parent;
+  let itemKey = fluentList.getKey ? fluentList.getKey(x.item, x.index) : x && x.key;
 
   if (itemKey === null || itemKey === undefined) {
-    itemKey = page.startIndex + c.index;
+    itemKey = x.index;
   }
 
   return itemKey;
-}}data-list-index=${(x, c) => c.parent.startIndex + c.index}>${(x, c) => c.parent.onRenderCell ? c.parent.onRenderCell(x, c.parent.startIndex + c.index) : ""}</div>`; // const PageTemplate = html<IPage2<any>>`
-//     <div data-page-key=${x => x.key} 
-//          class="ms-List-page"
-//          key="1"
-//          role="presentation"
-//          style="height:${x=> x.isSpacer ? x.height + "px" : "auto"};">
-//         ${repeat((x,c)=> x.items as any[], ItemTemplate, {positioning: true})}
-//     </div>
-// `;
+}}" data-list-index="${(x, c) => x.index}">${(x, c) => {
+  try {
+    let fluentList = c.parent;
+    let template;
 
-const ListTemplate = html`<template><div ${ref('_root')}role="list" style="overflow-y:hidden;height:100%;width:100%;"><div ${ref('scrollElement')} ${children('_refs')}style="overflow-y:auto;height:100%;width:100%;"><div ${ref('spacerBefore')}class="spacer" data-List-spacer="before" style="height:${x => x.virtualizedData.numItemsToSkipBefore * x.averageHeight}px;"></div>${repeat(x => x.virtualizedData.subSetOfItems, ItemTemplate)}<div ${ref('spacerAfter')}class="spacer" data-List-spacer="after" style="height:${x => x.virtualizedData.numItemsToSkipAfter * x.averageHeight}px;"></div></div></div></template>`;
+    for (let i = 0; i < fluentList.children.length; i++) {
+      template = fluentList.children.item(i);
+
+      if (template !== undefined) {
+        break;
+      }
+    } //fluentList.children.item(0) as HTMLTemplateElement; 
+
+
+    if (template !== undefined) {
+      //let template = fluentList.slottedNodes.find(x=>x.nodeName.toLowerCase() === "template") as HTMLTemplateElement; //.filter(v => v.nodeType === 1)[0] as HTMLTemplateElement;
+      try {
+        console.log(x);
+        var replaced = generateTemplateString(template.innerHTML)(x);
+        console.log(replaced); //if (template !== undefined){
+
+        return html`${replaced}`;
+      } catch (ex) {
+        console.log(ex);
+        html`${JSON.stringify(ex)}`;
+      } //}
+      //return "template undefined";
+
+    }
+
+    return "template undefined";
+  } catch (ex) {
+    return "BIG ERROR";
+  }
+}}<!--                     
+                    <fast-fluent-list-item index="${x => x.index}">${x => x.item.value}<slot name="itemTemplate"></slot></fast-fluent-list-item> --></div>`, {
+  positioning: false
+})}<div ${ref('spacerAfter')}class="spacer" data-List-spacer="after" style="height:${x => x.virtualizedData.numItemsToSkipAfter * x.averageHeight}px;"></div></div></div><slot ${slotted('slottedNodes')}></slot></template>`;
 
 const ListStyles = css` ${display("inline-block")} :host{font-family: var(--body-font);font-weight: var(--font-weight-semiBold);outline: none;user-select: none;height:100%;overflow-y:hidden;width:100%}:host(.disabled) label{opacity: var(--disabled-opacity)}:host(.required) label::after{content: ' *';color: #a4262c;padding-right: 12px}`;
-
-// const EMPTY_RECT = {
-//     top: -1,
-//     bottom: -1,
-//     left: -1,
-//     right: -1,
-//     width: 0,
-//     height: 0,
-// };
-// interface IPage2<T> extends IPage<T>{
-//     getKey?: (item: T, index?: number) => string;
-//     onRenderCell?: (item?: T, index?: number, isScrolling?: boolean) => ViewTemplate;
-// }
-// Naming expensive measures so that they're named in profiles.
-// const _measurePageRect = (element: HTMLElement) => element.getBoundingClientRect();
-// const _measureSurfaceRect = _measurePageRect;
-// const _measureScrollRect = _measurePageRect;
-// interface IPageCacheItem<T> {
-//     page: IPage2<T>;
-//     pageElement?: JSX.Element;
-// }
-// interface IPageCache<T> {
-//     [key: string]: IPageCacheItem<T>;
-// }
-// interface IListState<T = any> {
-//     pages: IPage2<T>[];
-//     /** The last versionstamp for  */
-//     measureVersion?: number;
-//     isScrolling?: boolean;
-// }
-// const RESIZE_DELAY = 16;
-// const MIN_SCROLL_UPDATE_DELAY = 100;
-// const MAX_SCROLL_UPDATE_DELAY = 500;
-// const IDLE_DEBOUNCE_DELAY = 200;
-// // The amount of time to wait before declaring that the list isn't scrolling
-// const DONE_SCROLLING_WAIT = 500;
-// const DEFAULT_ITEMS_PER_PAGE = 10;
-// const DEFAULT_PAGE_HEIGHT = 30;
-// const DEFAULT_RENDERED_WINDOWS_BEHIND = 2;
-// const DEFAULT_RENDERED_WINDOWS_AHEAD = 2;
-// const PAGE_KEY_PREFIX = 'page-';
-// const SPACER_KEY_PREFIX = 'spacer-';
-// interface IVirtualizedData<T> {
-//     subSetOfItems: T[];
-//     numItemsToSkipBefore: number;
-//     numItemsToSkipAfter: number;    
-//     numItemsToShow: number;
-// }
 
 let FluentList = class FluentList extends FASTElement {
   constructor() {
@@ -10818,8 +10818,7 @@ let FluentList = class FluentList extends FASTElement {
     this._estimatedPageHeight = 0;
     this._focusedIndex = -1; //this._pageCache = {};
     //this.getPageSpecification=undefined;
-
-    this.onRenderCell = (a, b, c) => html`${x => x}`;
+    //this.onRenderCell = (a,b,c) => html<T>`${x=>x}`;
   }
 
   itemsChanged(oldValue, newValue) {
@@ -10830,6 +10829,7 @@ let FluentList = class FluentList extends FASTElement {
     super.connectedCallback(); //const rootMargin: number = 500;
 
     this.intersectionObserver = new IntersectionObserver((entries, observer) => {
+      //DOM.queueUpdate(() => {
       entries.forEach(entry => {
         var _a;
 
@@ -10846,7 +10846,7 @@ let FluentList = class FluentList extends FASTElement {
         } else {
           throw new Error('Unknown intersection target');
         }
-      });
+      }); //});
     }, {
       root: this.scrollElement,
       rootMargin: '20px'
@@ -10855,23 +10855,16 @@ let FluentList = class FluentList extends FASTElement {
     this.intersectionObserver.observe(this.spacerAfter); // After each render, refresh the info about intersections
 
     this.mutationObserverBefore = new MutationObserver(mutations => {
-      DOM.queueUpdate(_ => {
-        this.intersectionObserver.unobserve(this.spacerBefore);
-        this.intersectionObserver.observe(this.spacerBefore);
-      });
+      //DOM.queueUpdate(_=>{
+      this.intersectionObserver.unobserve(this.spacerBefore);
+      this.intersectionObserver.observe(this.spacerBefore); //});
     });
     this.mutationObserverAfter = new MutationObserver(mutations => {
-      DOM.queueUpdate(_ => {
-        this.intersectionObserver.unobserve(this.spacerAfter);
-        this.intersectionObserver.observe(this.spacerAfter);
-      });
-    });
-    this.mutationObserverBefore.observe(this.spacerBefore, {
-      attributes: true
-    });
-    this.mutationObserverAfter.observe(this.spacerAfter, {
-      attributes: true
-    });
+      //DOM.queueUpdate(_=>{
+      this.intersectionObserver.unobserve(this.spacerAfter);
+      this.intersectionObserver.observe(this.spacerAfter); //});
+    }); //this.mutationObserverBefore.observe(this.spacerBefore, { attributes: true });
+    //this.mutationObserverAfter.observe(this.spacerAfter, { attributes: true });
   }
 
   onSpacerTrigger(spacerType, spacerSize, containerSize) {
@@ -10894,7 +10887,11 @@ let FluentList = class FluentList extends FASTElement {
       if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore || newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter || newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow) {
         this.virtualizedData = newVirtdata;
       }
+
+      this.intersectionObserver.unobserve(this.spacerBefore);
+      this.intersectionObserver.observe(this.spacerBefore); //});
     } else if (spacerType == "after") {
+      //DOM.queueUpdate(()=>{
       let numItemsToSkipAfter = Math.max(0, Math.floor(spacerSize / this.averageHeight) - 1);
       let numItemsToSkipBefore = Math.max(0, itemCount - numItemsToShow - numItemsToSkipAfter); //let subSetOfItems = this.items?.slice(numItemsToSkipBefore, numItemsToSkipBefore + numItemsToShow);
 
@@ -10907,8 +10904,12 @@ let FluentList = class FluentList extends FASTElement {
       };
 
       if (newVirtdata.numItemsToSkipBefore != this.virtualizedData.numItemsToSkipBefore || newVirtdata.numItemsToSkipAfter != this.virtualizedData.numItemsToSkipAfter || newVirtdata.numItemsToShow != this.virtualizedData.numItemsToShow) {
-        this.virtualizedData = newVirtdata;
+        //  DOM.queueUpdate(()=>{
+        this.virtualizedData = newVirtdata; //});
       }
+
+      this.intersectionObserver.unobserve(this.spacerAfter);
+      this.intersectionObserver.observe(this.spacerAfter); //});
     }
   }
 
@@ -10919,18 +10920,29 @@ let FluentList = class FluentList extends FASTElement {
 
     if (subset.length == 0 && this.items !== undefined) {
       var itemsToAdd = this.items.slice(numberToSkipFirst, numberToSkipFirst + totalToTake);
-      subset.push(...itemsToAdd);
+      let transformed = itemsToAdd.map((v, i) => {
+        return {
+          index: i + numberToSkipFirst,
+          item: v
+        };
+      });
+      subset.push(...transformed);
     } // before
 
 
-    let currentStartIndex = this.items.indexOf(subset[0]);
+    let currentStartIndex = subset[0].index; //let currentStartIndex = this.items.indexOf(subset[0]);
 
     if (numberToSkipFirst > currentStartIndex) {
       //need to remove items from subset start
       subset.splice(0, numberToSkipFirst - currentStartIndex);
     } else if (numberToSkipFirst < currentStartIndex) {
       //need to add more items to subset start
-      subset.splice(0, 0, ...this.items.slice(numberToSkipFirst, currentStartIndex));
+      subset.splice(0, 0, ...this.items.slice(numberToSkipFirst, currentStartIndex).map((v, i) => {
+        return {
+          item: v,
+          index: i + numberToSkipFirst
+        };
+      }));
     } // after
 
 
@@ -10939,7 +10951,13 @@ let FluentList = class FluentList extends FASTElement {
       subset.splice(totalToTake, subset.length - totalToTake);
     } else if (subset.length < totalToTake) {
       //not enough, need more from the original array
-      subset.push(...this.items.slice(numberToSkipFirst + subset.length, numberToSkipFirst + totalToTake));
+      let startIndex = numberToSkipFirst + subset.length;
+      subset.push(...this.items.slice(startIndex, numberToSkipFirst + totalToTake).map((v, i) => {
+        return {
+          item: v,
+          index: i + startIndex
+        };
+      }));
     }
   }
 
@@ -10949,7 +10967,12 @@ let FluentList = class FluentList extends FASTElement {
     let numItemsToSkipAfter = 0;
 
     if (this.items != undefined) {
-      subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20));
+      subSetOfItems = this.items.slice(0, Math.min(this.items.length, 20)).map((v, i) => {
+        return {
+          item: v,
+          index: i
+        };
+      });
       numItemsToShow = Math.min(this.items.length, 20);
       numItemsToSkipAfter = Math.max(0, this.items.length - 20);
     } else {

@@ -1,25 +1,39 @@
 @page "/counter"
 
-<div style="height:100%;overflow-y:hidden;">
-<h1>List</h1>
+<div style="height:100%;overflow-y:hidden;">   
+<h1>List</h1> 
 
-<fast-design-system-provider use-defaults>
-    
-    <div style="height:500px;">
-        <BFUList Items=@testList  /> 
-    </div>
-</fast-design-system-provider> 
+<fast-design-system-provider use-defaults> 
+      
+    <div style="height:500px;"> 
+        <BFUList ItemsSource=@testList TItem="DataItem">   
+            <ItemTemplate>   
+                <div style="background-color:red"> 
+                    Item: @context.Item.Name &amp;  
+                    Index: @context.Index    
+                </div>    
+                 
+            </ItemTemplate>  
+        </BFUList>  
+    </div> 
+</fast-design-system-provider>  
 </div>
-
+ 
 @code {
-    private List<int> testList;
 
-    protected override Task OnInitializedAsync()
+    class DataItem{
+        public string Name{get;set;}
+        public string Alt {get;set;} = "Alternate"; 
+    } 
+
+    private List<DataItem> testList; 
+
+    protected override Task OnInitializedAsync() 
     {
-        testList = new List<int>();  
+        testList = new List<DataItem>();  
         for (var i=0; i< 5000; i++)
         {
-            testList.Add(i);
+            testList.Add(new DataItem{Name = i.ToString()});
         }
         return Task.CompletedTask; 
     }
