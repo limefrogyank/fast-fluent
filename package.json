@@ -82,7 +82,7 @@
     "storybook": "^5.3.19",
     "ts-loader": "^8.0.1",
     "typescript": "^3.9.7",
-    "webpack": "^4.43.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^3.3.12",
     "webpack-env": "^0.8.0"
   },
